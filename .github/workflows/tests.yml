@@ -11,28 +11,46 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9"]
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
+    defaults:
+      run:
+        shell: bash -l {0}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup Conda
-      uses: s-weigand/setup-conda@v1
-      with:
-        activate-conda: false
-        conda-channels: conda-forge
-
-    - name: Python ${{ matrix.python-version }}
-      shell: bash -l {0}
-      run: |
-        conda create --name TEST python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
-        source activate TEST
-        pip install -e . --no-deps --force-reinstall
-        conda info --all
-        conda list
-
-    - name: Tests
-      shell: bash -l {0}
-      run: |
-        source activate TEST
-        pytest -rxs --cov=ioos_pkg_skeleton tests
+      - name: Cache conda
+        uses: actions/cache@v2
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-py3.9-xenso
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          channels: conda-forge
+          channel-priority: strict
+          mamba-version: "*"
+          activate-environment: xenso-env
+          auto-update-conda: false
+          python-version: 3.9
+          use-only-tar-bz2: true
+      - name: Install dependencies Python ${{ matrix.python-version }}
+        run: |
+          mamba install --yes --file requirements.txt --file requirements-dev.txt
+      - name: Install the Package
+        run: |
+          python -m pip install -e . --no-deps --force-reinstall
+      - name: Version info
+        run: |
+          conda info -a
+          conda list
+      - name: Run tests
+        run: |
+          pytest --cov=./ --cov-report=xml
+      - name: Upload code coverage to Codecov
+        uses: codecov/codecov-action@v1.0.15
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
