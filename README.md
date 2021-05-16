@@ -1,4 +1,4 @@
-## ioos_pkg_skeleton
+## xENSO
 
 [![Build Status](https://travis-ci.com/ioos/ioos-python-package-skeleton.svg?branch=master)](https://travis-ci.com/ioos/ioos-python-package-skeleton)
 
@@ -13,22 +13,22 @@ URLs for the docs and code.
 For `conda` users you can
 
 ```shell
-conda install --channel conda-forge ioos_pkg_skeleton
+conda install --channel conda-forge xenso
 ```
 
 or, if you are a `pip` users
 
 ```shell
-pip install ioos_pkg_skeleton
+pip install xenso
 ```
 
 ### Example
 
 ```python
-from ioos_pkg_skeleton import ioos_pkg_skeleton
+import xenso
 
 
-ioos_pkg_skeleton.meaning_of_life_url()
+xenso.meaning_of_life_url()
 ```
 
 
@@ -41,4 +41,4 @@ Report bugs, suggest features or view the source code on [GitHub](https://github
 
 ioos_pkg_skeleton is licensed under BSD 3-Clause "New" or "Revised" License (BSD-3-Clause).
 
-Development occurs on GitHub at <https://github.com/ioos/ioos_pkg_skeleton>.
+Development occurs on GitHub at <https://github.com/DangoMelon/xENSO>.
