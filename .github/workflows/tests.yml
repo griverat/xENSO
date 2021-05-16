@@ -7,6 +7,7 @@ on:
 
 jobs:
   run:
+    name: Build (${{ matrix.python-version }} | ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,7 +19,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
       - name: Cache conda
         uses: actions/cache@v2
         with:
@@ -30,8 +30,6 @@ jobs:
           channel-priority: strict
           mamba-version: "*"
           activate-environment: xenso-env
-          auto-update-conda: false
-          python-version: 3.9
           use-only-tar-bz2: true
       - name: Install dependencies Python ${{ matrix.python-version }}
         run: |
