@@ -13,6 +13,15 @@ from scipy.ndimage import convolve1d
 
 
 def compute_climatology(data: xr.DataArray, base_period: tuple):
+    """
+    Computes the seasonal mean of a DataArray that has a time
+    dimension
+
+    Parameters
+    ----------
+    data
+    base_period
+    """
     return data.sel(time=slice(*base_period)).groupby("time.month").mean()
 
 
@@ -21,6 +30,9 @@ def compute_anomaly(
     climatology: Optional[xr.DataArray] = None,
     base_period: Optional[tuple[str, str]] = None,
 ):
+    """
+    Computes the anomaly of a field in the time dimension
+    """
     if climatology is None:
         if base_period is None:
             raise ValueError(
@@ -34,6 +46,10 @@ def compute_anomaly(
 
 
 def xconvolve(data, kernel, dim=None):
+    """
+    Convolution using xarray data structures by using
+    xr.apply_ufunc
+    """
     res = xr.apply_ufunc(
         convolve1d,
         data,
