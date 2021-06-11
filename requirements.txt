@@ -1,2 +1,4 @@
+eofs
 numpy
+scipy
 xarray
