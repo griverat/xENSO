@@ -3,7 +3,7 @@ Module containing the definitions and methods to compute
 a variety of indices used to study ENSO
 """
 
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import xarray as xr
@@ -31,7 +31,11 @@ class ECindex:
         if isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
 
-    def _compute_pcs(self, corr_factor=[1, -1], smooth_kernel=[1, 2, 1]):
+    def _compute_pcs(
+        self,
+        corr_factor: List = [1, -1],
+        smooth_kernel: List = [1, 2, 1],
+    ):
         """
         Compute the principal components
         """
@@ -55,7 +59,7 @@ class ECindex:
         kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
         self.anom_smooth_pcs = xconvolve(self.anom_pcs, kernel, dim="time")
 
-    def _compute_index(self, smooth=False):
+    def _compute_index(self, smooth: bool = False):
         """
         Compute the E and C index
         """
