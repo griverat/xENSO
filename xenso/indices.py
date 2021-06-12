@@ -45,7 +45,7 @@ class ECindex:
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
             self.solver.projectField(
-                self.sst_anom.sortby("lat").sel(lat=slice(-10, 10)),
+                self.sst_data.sortby("lat").sel(lat=slice(-10, 10)),
                 neofs=2,
             )
             * corr_factor
