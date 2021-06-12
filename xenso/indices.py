@@ -7,8 +7,9 @@ from typing import Optional
 
 import numpy as np
 import xarray as xr
-from core import compute_anomaly, compute_climatology, xconvolve
 from eofs.xarray import Eof
+
+from .core import compute_anomaly, compute_climatology, xconvolve
 
 
 class ECindex:
