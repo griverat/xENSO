@@ -43,7 +43,7 @@ def compute_anomaly(
     return data.groupby("time.month") - climatology
 
 
-def xconvolve(data, kernel, dim=None):
+def xconvolve(data: xr.DataArray, kernel: xr.DataArray, dim: Optional[str] = None):
     """
     Convolution using xarray data structures by using
     xr.apply_ufunc
