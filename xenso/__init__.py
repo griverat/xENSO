@@ -2,12 +2,9 @@
 ioos_pkg_skeleton is not a real package, just a set of best practices examples.
 """
 
-from .core import meaning_of_life, meaning_of_life_url
+from .core import compute_anomaly, compute_climatology, xconvolve
 
-__all__ = [
-    "meaning_of_life",
-    "meaning_of_life_url",
-]
+__all__ = ["compute_climatology", "compute_anomaly", "xconvolve"]
 
 try:
     from ._version import __version__
