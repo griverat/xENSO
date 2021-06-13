@@ -10,7 +10,10 @@ import xarray as xr
 from scipy.ndimage import convolve1d
 
 
-def compute_climatology(data: xr.DataArray, base_period: tuple):
+def compute_climatology(
+    data: xr.DataArray,
+    base_period: tuple = (None, None),
+):
     """
     Computes the seasonal mean of a DataArray that has a time
     dimension
