@@ -104,3 +104,17 @@ class ECindex:
         rotated, also known as the E and C index
         """
         return self._compute_index(smooth=True)
+
+
+def enzones(data: xr.DataArray, zone: str = "34"):
+    """
+    Computes the mean from the selected El Niño zone, also
+    know as El Niño Index for each of the zones.
+    """
+    zones = {
+        "12": {"lat": slice(-10, 0), "lon": slice(270, 280)},
+        "3": {"lat": slice(-5, 5), "lon": slice(210, 270)},
+        "34": {"lat": slice(-5, 5), "lon": slice(190, 240)},
+        "4": {"lat": slice(-5, 5), "lon": slice(160, 210)},
+    }
+    return data.sel(**zones[zone]).mean(dim=["lat", "lon"])
