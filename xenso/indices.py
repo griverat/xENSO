@@ -35,7 +35,7 @@ class ECindex:
         self,
         corr_factor: List = [1, -1],
         smooth_kernel: List = [1, 2, 1],
-    ):
+    ) -> None:
         """
         Compute the principal components
         """
@@ -59,7 +59,7 @@ class ECindex:
         kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
         self.anom_smooth_pcs = xconvolve(self.anom_pcs, kernel, dim="time")
 
-    def _compute_index(self, smooth: bool = False):
+    def _compute_index(self, smooth: bool = False) -> tuple[xr.DataArray, xr.DataArray]:
         """
         Compute the E and C index
         """
@@ -74,7 +74,7 @@ class ECindex:
         return eindex, cindex
 
     @property
-    def get_pcs(self):
+    def get_pcs(self) -> xr.DataArray:
         """
         Return the first two principal components used
         in the computation of the E and C index
@@ -82,7 +82,7 @@ class ECindex:
         return self.anom_pcs
 
     @property
-    def get_pcs_smooth(self):
+    def get_pcs_smooth(self) -> xr.DataArray:
         """
         Return the first two principal components smoothed
         with the specified smooth_kernel
@@ -90,7 +90,7 @@ class ECindex:
         return self.anom_smooth_pcs
 
     @property
-    def get_index(self):
+    def get_index(self) -> xr.DataArray:
         """
         Return the first two principal components rotated,
         also known as the E and C index
@@ -98,7 +98,7 @@ class ECindex:
         return self._compute_index()
 
     @property
-    def get_smoothed_index(self):
+    def get_smoothed_index(self) -> xr.DataArray:
         """
         Return the first two principal components smoothed and
         rotated, also known as the E and C index
@@ -106,7 +106,7 @@ class ECindex:
         return self._compute_index(smooth=True)
 
 
-def enzones(data: xr.DataArray, zone: str = "34"):
+def enzones(data: xr.DataArray, zone: str = "34") -> xr.DataArray:
     """
     Computes the mean from the selected El Niño zone, also
     know as El Niño Index for each of the zones.
