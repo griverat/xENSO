@@ -15,7 +15,7 @@ from .utils import _check_dimensions
 def compute_climatology(
     data: xr.DataArray,
     base_period: tuple = (None, None),
-):
+) -> xr.DataArray:
     """
     Computes the seasonal mean of a DataArray that has a time
     dimension
@@ -33,7 +33,7 @@ def compute_anomaly(
     data: xr.DataArray,
     climatology: Optional[xr.DataArray] = None,
     base_period: Optional[tuple[str, str]] = None,
-):
+) -> xr.DataArray:
     """
     Computes the anomaly of a field in the time dimension
     """
@@ -50,7 +50,11 @@ def compute_anomaly(
     return data.groupby("time.month") - climatology
 
 
-def xconvolve(data: xr.DataArray, kernel: xr.DataArray, dim: Optional[str] = None):
+def xconvolve(
+    data: xr.DataArray,
+    kernel: xr.DataArray,
+    dim: Optional[str] = None,
+) -> xr.DataArray:
     """
     Convolution using xarray data structures by using
     xr.apply_ufunc

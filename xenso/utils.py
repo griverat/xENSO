@@ -7,7 +7,7 @@ import xarray as xr
 from xarray.core.variable import MissingDimensionsError
 
 
-def _check_dimensions(data: xr.DataArray, extra_dims: List[str] = []):
+def _check_dimensions(data: xr.DataArray, extra_dims: List[str] = []) -> None:
     """
     Function to test if time dimension + any extra dimension is present
     in the DataArray
