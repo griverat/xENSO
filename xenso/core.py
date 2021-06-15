@@ -9,6 +9,8 @@ from typing import Optional
 import xarray as xr
 from scipy.ndimage import convolve1d
 
+from .utils import _check_dimensions
+
 
 def compute_climatology(
     data: xr.DataArray,
@@ -23,6 +25,7 @@ def compute_climatology(
     data
     base_period
     """
+    _check_dimensions(data)
     return data.sel(time=slice(*base_period)).groupby("time.month").mean()
 
 
@@ -34,6 +37,7 @@ def compute_anomaly(
     """
     Computes the anomaly of a field in the time dimension
     """
+    _check_dimensions(data)
     if climatology is None:
         if base_period is None:
             raise ValueError(
