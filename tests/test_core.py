@@ -15,3 +15,17 @@ def test_compute_climatology():
 
     result = xenso.compute_climatology(data, ("2000-01-01", "2006-12-31"))
     xr.testing.assert_equal(result, expected)
+
+
+def test_compute_anomaly():
+    dates = pd.date_range("1981-01-01", "2010-12-31", freq="M")
+    data = xr.DataArray(np.tile(np.arange(12), 30), coords=[("time", dates)])
+    climatology = xr.DataArray(np.arange(12), coords=[("month", np.arange(1, 13))])
+
+    result = xenso.compute_anomaly(data, climatology=climatology)
+    expected = xr.full_like(data, 0)
+    expected["month"] = ("time", np.tile(np.arange(1, 13), 30))
+    xr.testing.assert_equal(result, expected)
+
+    result = xenso.compute_anomaly(data, base_period=("2000-01-01", "2005-12-31"))
+    xr.testing.assert_equal(result, expected)
