@@ -20,7 +20,7 @@ The best module ever written!
    :caption: Contents:
 
    tutorial.ipynb
-   ioos_pkg_skeleton
+   api
 
 Indices and tables
 ==================

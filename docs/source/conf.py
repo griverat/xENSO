@@ -51,15 +51,15 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "ioos_pkg_skeleton"
-copyright = "2017, Filipe Fernandes"
-author = "Filipe Fernandes"
+project = "xENSO"
+copyright = "2021, Gerardo A. Rivera"
+author = "Gerardo A. Rivera"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from ioos_pkg_skeleton import __version__ as VERSION  # noqa
+from xenso import __version__ as VERSION  # noqa
 
 version = VERSION
 # The full version, including alpha/beta/rc tags.
@@ -89,20 +89,20 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "sphinx_book_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
+
 html_theme_options = {
-    "logo": "logo.png",
-    "logo_name": "ioos_pkg_skeleton",
-    "github_user": "ioos",
-    "github_repo": "ioos_pkg_skeleton",
-    "github_banner": True,
-    "travis_button": True,
-    "fixed_sidebar": True,
+    "repository_url": "https://github.com/DangoMelon/xENSO",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "use_edit_page_button": True,
+    "use_download_button": True,
+    "path_to_docs": "docs",
 }
 
 
@@ -116,15 +116,15 @@ html_static_path = ["_static"]
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",  # needs 'show_related': True theme option to display
-        "searchbox.html",
-        "donate.html",
-    ],
-}
+# html_sidebars = {
+#     "**": [
+#         "about.html",
+#         "navigation.html",
+#         "relations.html",  # needs 'show_related': True theme option to display
+#         "searchbox.html",
+#         "donate.html",
+#     ],
+# }
 
 
 # -- Options for HTMLHelp output ------------------------------------------
