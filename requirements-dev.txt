@@ -18,6 +18,5 @@ pytest-xdist
 recommonmark
 setuptools_scm
 sphinx
-sphinx-book-theme
 twine
 wheel
