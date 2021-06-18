@@ -34,8 +34,9 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    "nbsphinx",
-    "recommonmark",
+    "sphinx_copybutton",
+    "numpydoc",
+    "myst_nb",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
