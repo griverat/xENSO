@@ -18,4 +18,3 @@ dependencies:
   - sphinx-copybutton
   - myst-parser
   - myst-nb
-  - sphinxcontrib-srclinks
