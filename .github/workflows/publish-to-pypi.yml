@@ -1,6 +1,12 @@
 # https://github.com/pypa/gh-action-pypi-publish
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
-on: push
+on:
+  release:
+    types:
+      - published
+  push:
+    tags:
+      - 'v*'
 jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
