@@ -3,7 +3,7 @@ Module containing the definitions and methods to compute
 a variety of indices used to study ENSO
 """
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import xarray as xr
@@ -22,7 +22,7 @@ class ECindex:
         sst_data: xr.DataArray,
         isanomaly: bool = False,
         climatology: Optional[xr.DataArray] = None,
-        base_period: tuple[str, str] = ("1979-01-01", "2009-12-30"),
+        base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
     ):
         self.sst_data = sst_data
         if climatology is None:
@@ -59,7 +59,7 @@ class ECindex:
         kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
         self.anom_smooth_pcs = xconvolve(self.anom_pcs, kernel, dim="time")
 
-    def _compute_index(self, smooth: bool = False) -> tuple[xr.DataArray, xr.DataArray]:
+    def _compute_index(self, smooth: bool = False) -> Tuple[xr.DataArray, xr.DataArray]:
         """
         Compute the E and C index
         """
