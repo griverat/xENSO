@@ -30,6 +30,7 @@ jobs:
           channel-priority: strict
           mamba-version: "*"
           activate-environment: xenso-env
+          python-version: ${{ matrix.python-version }}
           use-only-tar-bz2: true
       - name: Install dependencies Python ${{ matrix.python-version }}
         run: |
