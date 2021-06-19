@@ -14,3 +14,10 @@ exclude = ["setup.py", "docs", "tests", "*_version.py"]
 verbose = 1
 quiet = false
 color = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = " -v -n auto --cov-report term-missing --cov-report xml --cov xenso"
+testpaths = [
+    "tests",
+]
