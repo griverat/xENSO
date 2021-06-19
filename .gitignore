@@ -9,3 +9,4 @@ build/
 dist/
 docs/source/tutorial.ipynb
 xenso/_version.py
+coverage.xml
