@@ -4,7 +4,7 @@ ioos_pkg_skeleton
 My awesome ioos_pkg_skeleton
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 
 import xarray as xr
 from scipy.ndimage import convolve1d
@@ -14,7 +14,7 @@ from .utils import _check_dimensions
 
 def compute_climatology(
     data: xr.DataArray,
-    base_period: tuple = (None, None),
+    base_period: Tuple = (None, None),
 ) -> xr.DataArray:
     """
     Computes the seasonal mean of a DataArray that has a time
@@ -32,7 +32,7 @@ def compute_climatology(
 def compute_anomaly(
     data: xr.DataArray,
     climatology: Optional[xr.DataArray] = None,
-    base_period: Optional[tuple[str, str]] = None,
+    base_period: Optional[Tuple[str, str]] = None,
 ) -> xr.DataArray:
     """
     Computes the anomaly of a field in the time dimension
