@@ -72,7 +72,7 @@ class ECindex:
         """
         return self.anom_pcs * self._corr_factor
 
-    def _compute_index(self, smooth: bool = False) -> Tuple[xr.DataArray, xr.DataArray]:
+    def _compute_index(self, smooth: bool = False) -> xr.Dataset:
         """
         Compute the E and C index
         """
@@ -81,9 +81,11 @@ class ECindex:
             _pcs = xconvolve(self.anom_pcs, self._smooth_kernel, dim="time")
         pc1 = _pcs.sel(mode=0)
         pc2 = _pcs.sel(mode=1)
-        cindex = (pc1 + pc2) / (2 ** (1 / 2))
         eindex = (pc1 - pc2) / (2 ** (1 / 2))
-        return eindex, cindex
+        eindex.name = "E_index"
+        cindex = (pc1 + pc2) / (2 ** (1 / 2))
+        cindex.name = "C_index"
+        return xr.merge([eindex, cindex])
 
     @property
     def corr_factor(self) -> xr.DataArray:
@@ -140,7 +142,7 @@ class ECindex:
         return self.anom_smooth_pcs
 
     @property
-    def ecindex(self) -> xr.DataArray:
+    def ecindex(self) -> xr.Dataset:
         """
         Return the first two principal components rotated,
         also known as the E and C index
@@ -148,7 +150,7 @@ class ECindex:
         return self._compute_index()
 
     @property
-    def smoothed_ecindex(self) -> xr.DataArray:
+    def smoothed_ecindex(self) -> xr.Dataset:
         """
         Return the first two principal components smoothed and
         rotated, also known as the E and C index
