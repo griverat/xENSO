@@ -1,18 +1,12 @@
-Package Guidelines
-==================
+xENSO documentation
+===================
 
-.. toctree::
-   :maxdepth: 3
+This package aims to ease the computation of indices commonly used to monitor and study ENSO conditions.
 
-   how2package4ioos.md
+This project will eventually add more indices as I come across them.
 
-ioos_pkg_skeleton
-=================
 
-What is ioos_pkg_skeleton?
---------------------------
-
-The best module ever written!
+.. note:: I am farily new to creating packages so if someone comes across this repo feel free to suggest anything, I am more than willing to start a conversation!
 
 
 .. toctree::
