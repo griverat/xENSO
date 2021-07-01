@@ -29,7 +29,7 @@ class ECindex:
         if climatology is None:
             climatology = compute_climatology(self.sst_data, base_period)
         self.climatology = climatology
-        if isanomaly:
+        if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
 
     def _compute_pcs(
