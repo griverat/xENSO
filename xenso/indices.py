@@ -118,7 +118,7 @@ class ECindex:
         self._smoothkernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
 
     @property
-    def get_pcs(self) -> xr.DataArray:
+    def pcs(self) -> xr.DataArray:
         """
         Return the first two principal components used
         in the computation of the E and C index
@@ -126,7 +126,7 @@ class ECindex:
         return self.anom_pcs
 
     @property
-    def get_pcs_smooth(self) -> xr.DataArray:
+    def pcs_smooth(self) -> xr.DataArray:
         """
         Return the first two principal components smoothed
         with the specified smooth_kernel
@@ -140,7 +140,7 @@ class ECindex:
         return self.anom_smooth_pcs
 
     @property
-    def get_index(self) -> xr.DataArray:
+    def ecindex(self) -> xr.DataArray:
         """
         Return the first two principal components rotated,
         also known as the E and C index
@@ -148,7 +148,7 @@ class ECindex:
         return self._compute_index()
 
     @property
-    def get_smoothed_index(self) -> xr.DataArray:
+    def smoothed_ecindex(self) -> xr.DataArray:
         """
         Return the first two principal components smoothed and
         rotated, also known as the E and C index
