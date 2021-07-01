@@ -47,15 +47,12 @@ class ECindex:
         """
         Compute the principal components
         """
-        _subset = self.sst_data.sortby("lat").sel(
-            time=slice(*self.base_period),
-            lat=slice(-10, 10),
-        )
+        _subset = self.sst_data.sortby("lat").sel(lat=slice(-10, 10))
 
         coslat = np.cos(np.deg2rad(_subset.lat.data))
         wgts = np.sqrt(coslat)[..., np.newaxis]
 
-        self.solver = Eof(_subset, weights=wgts)
+        self.solver = Eof(_subset.sel(time=slice(*self.base_period)), weights=wgts)
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
             self.solver.projectField(
