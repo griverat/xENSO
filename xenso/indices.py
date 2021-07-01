@@ -31,6 +31,7 @@ class ECindex:
         self.climatology = climatology
         if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
+        self._compute_pcs()
 
     def _compute_pcs(
         self,
