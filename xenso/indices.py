@@ -25,6 +25,7 @@ class ECindex:
         base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
     ):
         self.sst_data = sst_data
+        self.base_period = base_period
         if climatology is None:
             climatology = compute_climatology(self.sst_data, base_period)
         self.climatology = climatology
@@ -39,17 +40,22 @@ class ECindex:
         """
         Compute the principal components
         """
-        coslat = np.cos(np.deg2rad(self.climatology.lat.data))
+        _subset = self.sst_data.sortby("lat").sel(
+            time=slice(*self.base_period),
+            lat=slice(-10, 10),
+        )
+
+        coslat = np.cos(np.deg2rad(_subset.lat.data))
         wgts = np.sqrt(coslat)[..., np.newaxis]
 
         if corr_factor is None:
             corr_factor = [1, 1]
         corr_factor = xr.DataArray(np.array(corr_factor), coords=[("mode", [0, 1])])
-        self.solver = Eof(self.climatology, weights=wgts)
+        self.solver = Eof(_subset, weights=wgts)
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
             self.solver.projectField(
-                self.sst_data.sortby("lat").sel(lat=slice(-10, 10)),
+                _subset,
                 neofs=2,
             )
             * corr_factor
