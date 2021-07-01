@@ -23,6 +23,8 @@ class ECindex:
         isanomaly: bool = False,
         climatology: Optional[xr.DataArray] = None,
         base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
+        corr_factor: List = [1, 1],
+        smooth_kernel: List = [1, 2, 1],
     ):
         self.sst_data = sst_data
         self.base_period = base_period
@@ -31,13 +33,17 @@ class ECindex:
         self.climatology = climatology
         if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
+        self._corr_factor = xr.DataArray(
+            np.array(corr_factor),
+            coords=[("mode", [0, 1])],
+        )
+        self._smooth_kernel = xr.DataArray(
+            np.array(smooth_kernel) / np.array(smooth_kernel).sum(),
+            dims=["time"],
+        )
         self._compute_pcs()
 
-    def _compute_pcs(
-        self,
-        corr_factor: List = [1, -1],
-        smooth_kernel: List = [1, 2, 1],
-    ) -> None:
+    def _compute_pcs(self) -> None:
         """
         Compute the principal components
         """
@@ -49,9 +55,6 @@ class ECindex:
         coslat = np.cos(np.deg2rad(_subset.lat.data))
         wgts = np.sqrt(coslat)[..., np.newaxis]
 
-        if corr_factor is None:
-            corr_factor = [1, 1]
-        corr_factor = xr.DataArray(np.array(corr_factor), coords=[("mode", [0, 1])])
         self.solver = Eof(_subset, weights=wgts)
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
@@ -59,26 +62,60 @@ class ECindex:
                 _subset,
                 neofs=2,
             )
-            * corr_factor
             / clim_std
         )
-        kernel = np.array(smooth_kernel)
-        kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
-        self.anom_smooth_pcs = xconvolve(self.anom_pcs, kernel, dim="time")
+        self.anom_smooth_pcs = None
+
+    def _corrected_pcs(self):
+        """
+        Return the pcs with the correction factor applied
+        """
+        return self.anom_pcs * self._corr_factor
 
     def _compute_index(self, smooth: bool = False) -> Tuple[xr.DataArray, xr.DataArray]:
         """
         Compute the E and C index
         """
+        _pcs = self._corrected_pcs()
         if smooth is True:
-            pc1 = self.anom_smooth_pcs.sel(mode=0)
-            pc2 = self.anom_smooth_pcs.sel(mode=1)
-        else:
-            pc1 = self.anom_pcs.sel(mode=0)
-            pc2 = self.anom_pcs.sel(mode=1)
+            _pcs = xconvolve(self.anom_pcs, self._smooth_kernel, dim="time")
+        pc1 = _pcs.sel(mode=0)
+        pc2 = _pcs.sel(mode=1)
         cindex = (pc1 + pc2) / (2 ** (1 / 2))
         eindex = (pc1 - pc2) / (2 ** (1 / 2))
         return eindex, cindex
+
+    @property
+    def corr_factor(self) -> xr.DataArray:
+        """
+        Return the correction factor applied to the first two pcs
+        """
+        return self._corr_factor
+
+    @corr_factor.setter
+    def corr_factor(self, corr_factor: List):
+        """
+        Set a new correction factor to be applied to the first two pcs
+        """
+        self._corr_factor = xr.DataArray(
+            np.array(corr_factor),
+            coords=[("mode", [0, 1])],
+        )
+
+    @property
+    def smooth_kernel(self) -> xr.DataArray:
+        """
+        Return the smooth kernel used in the first two pcs
+        """
+        return self._smooth_kernel
+
+    @smooth_kernel.setter
+    def smooth_kernel(self, smooth_kernel: List):
+        """
+        Set a new smooth kernel to be applied to the first two pcs
+        """
+        kernel = np.array(smooth_kernel)
+        self._smoothkernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
 
     @property
     def get_pcs(self) -> xr.DataArray:
@@ -94,6 +131,12 @@ class ECindex:
         Return the first two principal components smoothed
         with the specified smooth_kernel
         """
+        if self.anom_smooth_pcs is None:
+            self.anom_smooth_pcs = xconvolve(
+                self.anom_pcs,
+                self._smooth_kernel,
+                dim="time",
+            )
         return self.anom_smooth_pcs
 
     @property
