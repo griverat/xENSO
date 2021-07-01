@@ -23,7 +23,7 @@ class ECindex:
         isanomaly: bool = False,
         climatology: Optional[xr.DataArray] = None,
         base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
-        corr_factor: List = [1, 1],
+        corr_factor: Optional[List] = None,
         smooth_kernel: List = [1, 2, 1],
     ):
         self.sst_data = sst_data
@@ -33,15 +33,11 @@ class ECindex:
         self.climatology = climatology
         if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
-        self._corr_factor = xr.DataArray(
-            np.array(corr_factor),
-            coords=[("mode", [0, 1])],
-        )
-        self._smooth_kernel = xr.DataArray(
-            np.array(smooth_kernel) / np.array(smooth_kernel).sum(),
-            dims=["time"],
-        )
+        self._smooth_kernel = smooth_kernel
         self._compute_pcs()
+        self._corr_factor = corr_factor
+        if self._corr_factor is None:
+            self._auto_corr_factor()
 
     def _compute_pcs(self) -> None:
         """
@@ -67,7 +63,22 @@ class ECindex:
         """
         Return the pcs with the correction factor applied
         """
+        if self._corr_factor is None:
+            self._corr_factor = [1, 1]
         return self.anom_pcs * self._corr_factor
+
+    def _auto_corr_factor(self):
+        """
+        Automatically determine the correction factor by estimating
+        the sign of known events for the E and C index.
+        """
+        ecindex = self.ecindex
+        en97em = ecindex.E_index.sel(time=slice("1997-10-01", "1998-03-01")).mean()
+        ln98cm = ecindex.C_index.sel(time=slice("1998-10-01", "1999-03-01")).mean()
+        new_corr_factor = np.zeros(2)
+        new_corr_factor[0] = 1 if en97em > 0 else -1
+        new_corr_factor[1] = 1 if ln98cm < 0 else -1
+        self.corr_factor = new_corr_factor
 
     def _compute_index(self, smooth: bool = False) -> xr.Dataset:
         """
