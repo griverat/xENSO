@@ -23,8 +23,8 @@ class ECindex:
         isanomaly: bool = False,
         climatology: Optional[xr.DataArray] = None,
         base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
-        corr_factor: Optional[List] = None,
-        smooth_kernel: List = [1, 2, 1],
+        corr_factor: Optional[List[int]] = None,
+        smooth_kernel: List[int] = [1, 2, 1],
     ):
         self.sst_data = sst_data
         self.base_period = base_period
@@ -59,7 +59,7 @@ class ECindex:
         )
         self.anom_smooth_pcs = None
 
-    def _corrected_pcs(self):
+    def _corrected_pcs(self) -> xr.DataArray:
         """
         Return the pcs with the correction factor applied
         """
@@ -67,7 +67,7 @@ class ECindex:
             self._corr_factor = [1, 1]
         return self.anom_pcs * self._corr_factor
 
-    def _auto_corr_factor(self):
+    def _auto_corr_factor(self) -> None:
         """
         Automatically determine the correction factor by estimating
         the sign of known events for the E and C index.
@@ -103,7 +103,7 @@ class ECindex:
         return self._corr_factor
 
     @corr_factor.setter
-    def corr_factor(self, corr_factor: List):
+    def corr_factor(self, corr_factor: List[int]) -> None:
         """
         Set a new correction factor to be applied to the first two pcs
         """
@@ -120,7 +120,7 @@ class ECindex:
         return self._smooth_kernel
 
     @smooth_kernel.setter
-    def smooth_kernel(self, smooth_kernel: List):
+    def smooth_kernel(self, smooth_kernel: List) -> None:
         """
         Set a new smooth kernel to be applied to the first two pcs
         """
