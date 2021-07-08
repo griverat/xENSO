@@ -72,12 +72,11 @@ class ECindex:
         Automatically determine the correction factor by estimating
         the sign of known events for the E and C index.
         """
-        ecindex = self.ecindex
-        en97em = ecindex.E_index.sel(time=slice("1997-10-01", "1998-03-01")).mean()
-        ln98cm = ecindex.C_index.sel(time=slice("1998-10-01", "1999-03-01")).mean()
+        _eofs = self.solver.eofs(neofs=2)
+        _subset = dict(lat=slice(-2, 2), lon=slice(210, 250))
         new_corr_factor = np.zeros(2)
-        new_corr_factor[0] = 1 if en97em > 0 else -1
-        new_corr_factor[1] = 1 if ln98cm < 0 else -1
+        new_corr_factor[0] = 1 if _eofs.sel(mode=0, **_subset).mean() > 0 else -1
+        new_corr_factor[1] = 1 if _eofs.sel(mode=1, **_subset).mean() < 0 else -1
         self.corr_factor = new_corr_factor
 
     def _compute_index(self, smooth: bool = False) -> xr.Dataset:
