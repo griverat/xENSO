@@ -157,7 +157,7 @@ class ECindex:
         return self._compute_index()
 
     @property
-    def smoothed_ecindex(self) -> xr.Dataset:
+    def ecindex_smooth(self) -> xr.Dataset:
         """
         Return the first two principal components smoothed and
         rotated, also known as the E and C index
