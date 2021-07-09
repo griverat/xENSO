@@ -85,7 +85,7 @@ class ECindex:
         """
         _pcs = self._corrected_pcs()
         if smooth is True:
-            _pcs = xconvolve(self.anom_pcs, self._smooth_kernel, dim="time")
+            _pcs = xconvolve(_pcs, self._smooth_kernel, dim="time")
         pc1 = _pcs.sel(mode=0)
         pc2 = _pcs.sel(mode=1)
         eindex = (pc1 - pc2) / (2 ** (1 / 2))
@@ -132,7 +132,7 @@ class ECindex:
         Return the first two principal components used
         in the computation of the E and C index
         """
-        return self.anom_pcs
+        return self._corrected_pcs()
 
     @property
     def pcs_smooth(self) -> xr.DataArray:
@@ -142,7 +142,7 @@ class ECindex:
         """
         if self.anom_smooth_pcs is None:
             self.anom_smooth_pcs = xconvolve(
-                self.anom_pcs,
+                self._corrected_pcs(),
                 self._smooth_kernel,
                 dim="time",
             )
