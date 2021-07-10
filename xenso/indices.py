@@ -33,11 +33,12 @@ class ECindex:
         self.climatology = climatology
         if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
-        self._smooth_kernel = smooth_kernel
         self._compute_pcs()
-        self._corr_factor = corr_factor
-        if self._corr_factor is None:
+        self.smooth_kernel = smooth_kernel
+        if corr_factor is None:
             self._auto_corr_factor()
+        else:
+            self.corr_factor = corr_factor
 
     def _compute_pcs(self) -> None:
         """
@@ -63,9 +64,7 @@ class ECindex:
         """
         Return the pcs with the correction factor applied
         """
-        if self._corr_factor is None:
-            self._corr_factor = [1, 1]
-        return self.anom_pcs * self._corr_factor
+        return self.anom_pcs * self.corr_factor
 
     def _auto_corr_factor(self) -> None:
         """
@@ -124,7 +123,7 @@ class ECindex:
         Set a new smooth kernel to be applied to the first two pcs
         """
         kernel = np.array(smooth_kernel)
-        self._smoothkernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
+        self._smooth_kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
 
     @property
     def pcs(self) -> xr.DataArray:
