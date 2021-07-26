@@ -53,7 +53,7 @@ class ECindex:
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
             self.solver.projectField(
-                _subset,
+                _subset.drop("month"),
                 neofs=2,
             )
             / clim_std
