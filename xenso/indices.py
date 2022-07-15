@@ -45,6 +45,8 @@ class ECindex:
         Compute the principal components
         """
         _subset = self.sst_data.sortby("lat").sel(lat=slice(-10, 10))
+        if "month" in _subset.dims:
+            _subset = _subset.drop("month")
 
         coslat = np.cos(np.deg2rad(_subset.lat.data))
         wgts = np.sqrt(coslat)[..., np.newaxis]
@@ -53,7 +55,7 @@ class ECindex:
         clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
         self.anom_pcs = (
             self.solver.projectField(
-                _subset.drop("month"),
+                _subset,
                 neofs=2,
             )
             / clim_std
