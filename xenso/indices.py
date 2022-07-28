@@ -91,9 +91,9 @@ class ECindex:
         """
         Compute the E and C index
         """
-        _pcs = self._corrected_pcs()
+        _pcs = self.pcs
         if smooth is True:
-            _pcs = xconvolve(_pcs, self._smooth_kernel, dim="time")
+            _pcs = self.pcs_smooth
         pc1 = _pcs.sel(mode=0)
         pc2 = _pcs.sel(mode=1)
         eindex = (pc1 - pc2) / (2 ** (1 / 2))
