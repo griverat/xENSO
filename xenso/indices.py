@@ -21,12 +21,16 @@ class ECindex:
         self,
         sst_data: xr.DataArray,
         isanomaly: bool = False,
+        lat_range: Optional[Tuple[float, float]] = (-10, 10),
+        long_range: Optional[Tuple[float, float]] = (110, 290),
         climatology: Optional[xr.DataArray] = None,
         base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
         corr_factor: Optional[List[int]] = None,
         smooth_kernel: List[int] = [1, 2, 1],
     ):
         self.sst_data = sst_data
+        self.lat_range = lat_range
+        self.long_range = long_range
         self.base_period = base_period
         if climatology is None and not isanomaly:
             climatology = compute_climatology(self.sst_data, base_period)
@@ -44,7 +48,10 @@ class ECindex:
         """
         Compute the principal components
         """
-        _subset = self.sst_data.sortby("lat").sel(lat=slice(-10, 10))
+        _subset = self.sst_data.sortby(["lat", "lon"]).sel(
+            lat=slice(*self.lat_range),  # type: ignore
+            lon=slice(*self.long_range),  # type: ignore
+        )
         if "month" in _subset.dims:
             _subset = _subset.drop("month")
 
