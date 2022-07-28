@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import xarray as xr
+from eofs.tools.standard import covariance_map
 from eofs.xarray import Eof
 
 from .core import compute_anomaly, compute_climatology, xconvolve
@@ -171,6 +172,35 @@ class ECindex:
         rotated, also known as the E and C index
         """
         return self._compute_index(smooth=True)
+
+    @property
+    def eofs(self) -> xr.DataArray:
+        """
+        Returnt the first two corrected empirical orthogonal functions
+        """
+        return self.solver.eofs(neofs=2) * self.corr_factor
+
+    @property
+    def patterns(self) -> xr.Dataset:
+        """
+        Return the E and C patterns
+        """
+        _subsetEC = self.ecindex.sel(time=slice(*self.base_period))
+        _indexdata = xr.concat([_subsetEC.E_index, _subsetEC.C_index], dim="mode").T
+        reg_map = covariance_map(
+            _indexdata.data,
+            self.sst_data.sel(time=slice(*self.base_period)).data,
+        ) / np.expand_dims(_indexdata.std(dim="time").data, axis=[1, 2])
+        pattern = xr.Dataset(
+            data_vars=dict(
+                E_pattern=(["lat", "lon"], reg_map[0]),
+                C_pattern=(["lat", "lon"], reg_map[1]),
+            ),
+            coords={"lat": self.sst_data.lat, "lon": self.sst_data.lon},
+            attrs=dict(description="E and C regression patterns"),
+        )
+
+        return pattern
 
 
 def enzones(data: xr.DataArray, zone: str = "34") -> xr.DataArray:
