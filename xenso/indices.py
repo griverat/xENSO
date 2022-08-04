@@ -82,10 +82,10 @@ class ECindex:
         the sign of known events for the E and C index.
         """
         _eofs = self.solver.eofs(neofs=2)
-        _subset = dict(lat=slice(-2, 2), lon=slice(210, 220))
+        _subset = dict(lat=slice(-5, 5), lon=slice(210, 220))
         new_corr_factor = np.zeros(2)
         new_corr_factor[0] = 1 if _eofs.sel(mode=0, **_subset).mean() > 0 else -1
-        new_corr_factor[1] = 1 if _eofs.sel(mode=1, **_subset).mean() < 0 else -1
+        new_corr_factor[1] = 1 if _eofs.sel(mode=1, **_subset).mean() > 0 else -1
         self.corr_factor = new_corr_factor
 
     def _compute_index(self, smooth: bool = False) -> xr.Dataset:
