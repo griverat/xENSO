@@ -60,14 +60,7 @@ class ECindex:
         wgts = np.sqrt(coslat)[..., np.newaxis]
 
         self.solver = Eof(_subset.sel(time=slice(*self.base_period)), weights=wgts)
-        clim_std = self.solver.eigenvalues(neigs=2) ** (1 / 2)
-        self.anom_pcs = (
-            self.solver.projectField(
-                _subset,
-                neofs=2,
-            )
-            / clim_std
-        )
+        self.anom_pcs = self.solver.projectField(_subset, neofs=2, eofscaling=1)
         self.anom_smooth_pcs = None
 
     def _corrected_pcs(self) -> xr.DataArray:
@@ -81,7 +74,7 @@ class ECindex:
         Automatically determine the correction factor by estimating
         the sign of known events for the E and C index.
         """
-        _eofs = self.solver.eofs(neofs=2)
+        _eofs = self.solver.eofs(neofs=2, eofscaling=1)
         _subset = dict(lat=slice(-5, 5), lon=slice(180, 200))
         new_corr_factor = np.zeros(2)
         new_corr_factor[0] = 1 if _eofs.sel(mode=0, **_subset).mean() > 0 else -1
@@ -178,7 +171,7 @@ class ECindex:
         """
         Returnt the first two corrected empirical orthogonal functions
         """
-        return self.solver.eofs(neofs=2) * self.corr_factor
+        return self.solver.eofs(neofs=2, eofscaling=1) * self.corr_factor
 
     @property
     def patterns(self) -> xr.Dataset:
