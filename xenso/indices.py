@@ -6,6 +6,7 @@ a variety of indices used to study ENSO
 from typing import List, Optional, Tuple
 
 import numpy as np
+import numpy.polynomial.polynomial as poly
 import xarray as xr
 from eofs.tools.standard import covariance_map
 from eofs.xarray import Eof
@@ -15,7 +16,7 @@ from .core import compute_anomaly, compute_climatology, xconvolve
 
 class ECindex:
     """
-    Computes the E and C index according to Takahashi
+    Computes the E and C index according to Takahashi et al. 2011
     """
 
     def __init__(
@@ -194,6 +195,19 @@ class ECindex:
         )
 
         return pattern
+
+    @staticmethod
+    def compute_alpha(pc1, pc2, return_fit=False):
+        """
+        Compute the alpha parameter used to measure the non-linearity of
+        the E and C index
+        """
+        coefs = poly.polyfit(pc1, pc2, deg=2)
+        if return_fit:
+            xfit = np.arange(pc1.min(), pc1.max() + 0.1, 0.1)
+            fit = poly.polyval(xfit, coefs)
+            return coefs[-1], xfit, fit
+        return coefs[-1]
 
 
 def enzones(data: xr.DataArray, zone: str = "34") -> xr.DataArray:
