@@ -5,6 +5,7 @@ a variety of indices used to study ENSO
 
 from typing import List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
@@ -208,6 +209,51 @@ class ECindex:
             fit = poly.polyval(xfit, coefs)
             return coefs[-1], xfit, fit
         return coefs[-1]
+
+    @staticmethod
+    def plot_kiwi(pc1, pc2, ax: plt.Axes = None):
+        """
+        Makes the kiwi plot of the pc1 and pc2 for the mean of the
+        DJF season
+        """
+        if ax is None:
+            _, ax = plt.subplots(figsize=(6, 6))
+
+        pc1 = pc1.sel(time=pc1.time.dt.month.isin([12, 1, 2]))
+        pc1 = pc1.resample(time="QS-DEC").mean().dropna("time")
+
+        pc2 = pc2.sel(time=pc2.time.dt.month.isin([12, 1, 2]))
+        pc2 = pc2.resample(time="QS-DEC").mean().dropna("time")
+
+        alpha, xfit, fit = ECindex.compute_alpha(pc1, pc2, return_fit=True)
+
+        ax.axhline(0, color="k", linestyle="--", alpha=0.2)
+        ax.axvline(0, color="k", linestyle="--", alpha=0.2)
+
+        # draw a line 45 degrees
+        x = np.linspace(-6, 6, 100)
+        y = x
+        ax.plot(x, y, color="k", alpha=0.5, lw=1)
+        ax.plot(-x, y, color="k", alpha=0.5, lw=1)
+
+        ax.scatter(
+            pc1,
+            pc2,
+            s=8,
+            marker="o",
+            c="w",
+            edgecolors="k",
+            linewidths=0.5,
+        )
+
+        ax.plot(xfit, fit, c="r", label=f"$\\alpha=${alpha:.2f}")
+
+        ax.set_xlabel("PC1")
+        ax.set_ylabel("PC2")
+
+        ax.set_xlim(-4, 6)
+        ax.set_ylim(-6, 4)
+        ax.legend()
 
 
 def enzones(data: xr.DataArray, zone: str = "34") -> xr.DataArray:
