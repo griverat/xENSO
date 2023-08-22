@@ -131,6 +131,14 @@ class ECindex:
         self._smooth_kernel = xr.DataArray(kernel / kernel.sum(), dims=["time"])
 
     @property
+    def clim_pcs(self) -> xr.DataArray:
+        """
+        Return the first two principal components computed
+        from the climatology
+        """
+        return self.solver.pcs(pcscaling=1, npcs=2) * self.corr_factor
+
+    @property
     def pcs(self) -> xr.DataArray:
         """
         Return the first two principal components used
