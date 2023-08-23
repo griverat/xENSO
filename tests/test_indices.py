@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import xarray as xr
 
@@ -36,3 +37,45 @@ class TestECindex:
     def test_compute_patterns(self, ec):
         expected = xr.open_dataset("tests/data/ecindex_patterns.nc")
         xr.testing.assert_allclose(ec.patterns, expected)
+
+    def test_custom_corr_factor(self, ersstv5):
+        ec = xenso.indices.ECindex(
+            ersstv5,
+            base_period=("1991", "2020"),
+            corr_factor=[-1, -1],
+        )
+        expected = xr.DataArray(
+            [-1, -1],
+            coords=[("mode", [0, 1])],
+        )
+        xr.testing.assert_allclose(ec.corr_factor, expected)
+
+    def test_custom_smooth_kernel(self, ersstv5):
+        ec = xenso.indices.ECindex(
+            ersstv5,
+            base_period=("1991", "2020"),
+            smooth_kernel=[1, 1, 1],
+        )
+        expected = xr.DataArray([1 / 3, 1 / 3, 1 / 3], dims=["time"])
+        xr.testing.assert_allclose(ec.smooth_kernel, expected)
+
+    def test_compute_alpha(self):
+        actual = xenso.indices.ECindex.compute_alpha(
+            np.arange(1, 13),
+            0.5 * np.arange(1, 13) ** 2,
+        )
+        expected = 0.5
+        np.testing.assert_allclose(actual, expected)
+
+    def test_compute_alpha_fit(self):
+        actual_coef, actual_xfit, actual_fit = xenso.indices.ECindex.compute_alpha(
+            np.arange(1, 13),
+            0.5 * np.arange(1, 13) ** 2,
+            return_fit=True,
+        )
+        expected_coef = 0.5
+        expected_xfit = np.arange(1, 12 + 0.1, 0.1)
+        expected_fit = expected_coef * expected_xfit**2
+        np.testing.assert_allclose(actual_coef, expected_coef)
+        np.testing.assert_allclose(actual_xfit, expected_xfit)
+        np.testing.assert_allclose(actual_fit, expected_fit)

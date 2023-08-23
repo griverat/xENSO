@@ -43,6 +43,7 @@ class ECindex:
         self._compute_pcs()
         self.smooth_kernel = smooth_kernel
         if corr_factor is None:
+            self.corr_factor = [1, 1]
             self._auto_corr_factor()
         else:
             self.corr_factor = corr_factor
@@ -55,8 +56,6 @@ class ECindex:
             lat=slice(*self.lat_range),  # type: ignore
             lon=slice(*self.long_range),  # type: ignore
         )
-        if "month" in _subset.dims:
-            _subset = _subset.drop("month")
 
         coslat = np.cos(np.deg2rad(_subset.lat.data))
         wgts = np.sqrt(coslat)[..., np.newaxis]
@@ -76,7 +75,7 @@ class ECindex:
         Automatically determine the correction factor by estimating
         the sign of known events for the E and C index.
         """
-        _eofs = self.solver.eofs(neofs=2, eofscaling=1)
+        _eofs = self.eofs
         _subset = dict(lat=slice(-5, 5), lon=slice(180, 200))
         new_corr_factor = np.zeros(2)
         new_corr_factor[0] = 1 if _eofs.sel(mode=0, **_subset).mean() > 0 else -1
@@ -219,7 +218,7 @@ class ECindex:
         return coefs[-1]
 
     @staticmethod
-    def plot_kiwi(pc1, pc2, ax: plt.Axes = None):
+    def plot_kiwi(pc1, pc2, ax: plt.Axes = None):  # pragma: no cover
         """
         Makes the kiwi plot of the pc1 and pc2 for the mean of the
         DJF season
