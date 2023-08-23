@@ -1,4 +1,6 @@
 eofs
+matplotlib
+netcdf4
 numpy
 scipy
 xarray
