@@ -19,6 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: true
       - name: Setup Micromamba ${{ matrix.python-version }}
         uses: mamba-org/setup-micromamba@v1
         with:
