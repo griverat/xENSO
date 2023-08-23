@@ -20,16 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Micromamba ${{ matrix.python-version }}
-      uses: mamba-org/setup-micromamba@v1
-      with:
-        environment-name: TEST
-        init-shell: bash
-        create-args: >-
-          python=${{ matrix.python-version }} pip
-          --file requirements.txt
-          --file requirements-dev.txt
-          --channel conda-forge
-
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: TEST
+          init-shell: bash
+          create-args: >-
+            python=${{ matrix.python-version }} pip
+            --file requirements.txt
+            --file requirements-dev.txt
+            --channel conda-forge
       - name: Install the Package
         shell: bash -l {0}
         run: |
