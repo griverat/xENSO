@@ -79,3 +79,21 @@ class TestECindex:
         np.testing.assert_allclose(actual_coef, expected_coef)
         np.testing.assert_allclose(actual_xfit, expected_xfit)
         np.testing.assert_allclose(actual_fit, expected_fit)
+
+
+class TestENzones:
+    @pytest.fixture(scope="class")
+    def dummy(self):
+        return xr.DataArray(
+            np.tile(np.arange(360), (180, 1)),
+            dims=["lat", "lon"],
+            coords={"lat": np.arange(-90, 90), "lon": np.arange(360)},
+        )
+
+    @pytest.mark.parametrize(
+        "zone,expected",
+        [("12", 275), ("3", 240), ("34", 215), ("4", 185)],
+    )
+    def test_compute_enzones(self, dummy, zone, expected):
+        actual = xenso.indices.enzones(dummy, zone=zone)
+        np.testing.assert_allclose(actual, expected)
