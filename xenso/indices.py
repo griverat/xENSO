@@ -10,7 +10,7 @@ import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
 from eofs.tools.standard import covariance_map
-from eofs.xarray import Eof
+from xeofs.models import EOF
 
 from .core import compute_anomaly, compute_climatology, xconvolve
 
@@ -57,11 +57,12 @@ class ECindex:
             lon=slice(*self.long_range),  # type: ignore
         )
 
-        coslat = np.cos(np.deg2rad(_subset.lat.data))
-        wgts = np.sqrt(coslat)[..., np.newaxis]
-
-        self.solver = Eof(_subset.sel(time=slice(*self.base_period)), weights=wgts)
-        self.anom_pcs = self.solver.projectField(_subset, neofs=2, eofscaling=1)
+        self.model = EOF(n_modes=2, use_coslat=True)
+        self.model.fit(_subset.sel(time=slice(*self.base_period)), dim="time")
+        self._scale = self.model.singular_values() / np.sqrt(
+            self.model.explained_variance(),
+        )
+        self.anom_pcs = self.model.transform(_subset) * self._scale
         self.anom_smooth_pcs = None
 
     def _corrected_pcs(self) -> xr.DataArray:
@@ -78,8 +79,8 @@ class ECindex:
         _eofs = self.eofs
         _subset = dict(lat=slice(-5, 5), lon=slice(180, 200))
         new_corr_factor = np.zeros(2)
-        new_corr_factor[0] = 1 if _eofs.sel(mode=0, **_subset).mean() > 0 else -1
-        new_corr_factor[1] = 1 if _eofs.sel(mode=1, **_subset).mean() > 0 else -1
+        new_corr_factor[0] = 1 if _eofs.sel(mode=1, **_subset).mean() > 0 else -1
+        new_corr_factor[1] = 1 if _eofs.sel(mode=2, **_subset).mean() > 0 else -1
         self.corr_factor = new_corr_factor
 
     def _compute_index(self, smooth: bool = False) -> xr.Dataset:
@@ -89,8 +90,8 @@ class ECindex:
         _pcs = self.pcs
         if smooth is True:
             _pcs = self.pcs_smooth
-        pc1 = _pcs.sel(mode=0)
-        pc2 = _pcs.sel(mode=1)
+        pc1 = _pcs.sel(mode=1)
+        pc2 = _pcs.sel(mode=2)
         eindex = (pc1 - pc2) / (2 ** (1 / 2))
         eindex.name = "E_index"
         cindex = (pc1 + pc2) / (2 ** (1 / 2))
@@ -111,7 +112,7 @@ class ECindex:
         """
         self._corr_factor = xr.DataArray(
             np.array(corr_factor),
-            coords=[("mode", [0, 1])],
+            coords=[("mode", [1, 2])],
         )
 
     @property
@@ -135,7 +136,7 @@ class ECindex:
         Return the first two principal components computed
         from the climatology
         """
-        return self.solver.pcs(pcscaling=1, npcs=2) * self.corr_factor
+        return self.model.scores().T * self._scale * self.corr_factor
 
     @property
     def pcs(self) -> xr.DataArray:
@@ -143,7 +144,7 @@ class ECindex:
         Return the first two principal components used
         in the computation of the E and C index
         """
-        return self._corrected_pcs()
+        return self._corrected_pcs().T
 
     @property
     def pcs_smooth(self) -> xr.DataArray:
@@ -153,7 +154,7 @@ class ECindex:
         """
         if self.anom_smooth_pcs is None:
             self.anom_smooth_pcs = xconvolve(
-                self._corrected_pcs(),
+                self.pcs,
                 self._smooth_kernel,
                 dim="time",
             )
@@ -180,7 +181,7 @@ class ECindex:
         """
         Returnt the first two corrected empirical orthogonal functions
         """
-        return self.solver.eofs(neofs=2, eofscaling=1) * self.corr_factor
+        return self.model.components() * self._scale * self.corr_factor
 
     @property
     def patterns(self) -> xr.Dataset:
