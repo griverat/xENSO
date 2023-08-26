@@ -181,7 +181,13 @@ class ECindex:
         """
         Returnt the first two corrected empirical orthogonal functions
         """
-        return self.model.components() * self._scale * self.corr_factor
+        return (
+            self.model.components()
+            * self.corr_factor
+            / np.sqrt(
+                self.model.explained_variance(),
+            )
+        )
 
     @property
     def patterns(self) -> xr.Dataset:
