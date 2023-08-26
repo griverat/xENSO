@@ -5,6 +5,7 @@ dependencies:
   - numpy
   - scipy
   - xarray
+  - xeofs
   - eofs
   - cartopy
   - matplotlib

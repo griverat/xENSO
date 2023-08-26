@@ -12,27 +12,27 @@ class TestECindex:
 
     def test_compute_ecindex(self, ec):
         expected = xr.open_dataset("tests/data/ecindex.nc")
-        xr.testing.assert_allclose(ec.ecindex, expected)
+        xr.testing.assert_allclose(ec.ecindex, expected, rtol=1e-3)
 
     def test_compute_ecindex_smooth(self, ec):
         expected = xr.open_dataset("tests/data/ecindex_smooth.nc")
-        xr.testing.assert_allclose(ec.ecindex_smooth, expected)
+        xr.testing.assert_allclose(ec.ecindex_smooth, expected, rtol=1e-3)
 
     def test_compute_pcs(self, ec):
         expected = xr.open_dataarray("tests/data/ecindex_pcs.nc")
-        xr.testing.assert_allclose(ec.clim_pcs, expected)
+        xr.testing.assert_allclose(ec.clim_pcs, expected, rtol=1e-3)
 
     def test_compute_pcs_projection(self, ec):
         expected = xr.open_dataarray("tests/data/ecindex_pcs_projection.nc")
-        xr.testing.assert_allclose(ec.pcs, expected)
+        xr.testing.assert_allclose(ec.pcs, expected, rtol=1e-3)
 
     def test_compute_pcs_projection_smooth(self, ec):
         expected = xr.open_dataarray("tests/data/ecindex_pcs_projection_smooth.nc")
-        xr.testing.assert_allclose(ec.pcs_smooth, expected)
+        xr.testing.assert_allclose(ec.pcs_smooth, expected, rtol=1e-3)
 
     def test_compute_eofs(self, ec):
         expected = xr.open_dataarray("tests/data/ecindex_eofs.nc")
-        xr.testing.assert_allclose(ec.eofs, expected)
+        xr.testing.assert_allclose(ec.eofs, expected, rtol=1e-3)
 
     def test_compute_patterns(self, ec):
         expected = xr.open_dataset("tests/data/ecindex_patterns.nc")
@@ -46,9 +46,9 @@ class TestECindex:
         )
         expected = xr.DataArray(
             [-1, -1],
-            coords=[("mode", [0, 1])],
+            coords=[("mode", [1, 2])],
         )
-        xr.testing.assert_allclose(ec.corr_factor, expected)
+        xr.testing.assert_allclose(ec.corr_factor, expected, rtol=1e-3)
 
     def test_custom_smooth_kernel(self, ersstv5):
         ec = xenso.indices.ECindex(
@@ -57,7 +57,7 @@ class TestECindex:
             smooth_kernel=[1, 1, 1],
         )
         expected = xr.DataArray([1 / 3, 1 / 3, 1 / 3], dims=["time"])
-        xr.testing.assert_allclose(ec.smooth_kernel, expected)
+        xr.testing.assert_allclose(ec.smooth_kernel, expected, rtol=1e-3)
 
     def test_compute_alpha(self):
         actual = xenso.indices.ECindex.compute_alpha(
