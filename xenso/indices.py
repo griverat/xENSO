@@ -3,7 +3,7 @@ Module containing the definitions and methods to compute
 a variety of indices used to study ENSO
 """
 
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,12 +24,12 @@ class ECindex:
         self,
         sst_data: xr.DataArray,
         isanomaly: bool = False,
-        lat_range: Optional[Tuple[float, float]] = (-10, 10),
-        long_range: Optional[Tuple[float, float]] = (110, 290),
+        lat_range: Optional[tuple[float, float]] = (-10, 10),
+        long_range: Optional[tuple[float, float]] = (110, 290),
         climatology: Optional[xr.DataArray] = None,
-        base_period: Tuple[str, str] = ("1979-01-01", "2009-12-30"),
-        corr_factor: Optional[List[int]] = None,
-        smooth_kernel: List[int] = [1, 2, 1],
+        base_period: tuple[str, str] = ("1979-01-01", "2009-12-30"),
+        corr_factor: Optional[list[int]] = None,
+        smooth_kernel: list[int] = [1, 2, 1],
     ):
         self.sst_data = sst_data
         self.lat_range = lat_range
@@ -106,7 +106,7 @@ class ECindex:
         return self._corr_factor
 
     @corr_factor.setter
-    def corr_factor(self, corr_factor: List[int]) -> None:
+    def corr_factor(self, corr_factor: list[int]) -> None:
         """
         Set a new correction factor to be applied to the first two pcs
         """
@@ -123,7 +123,7 @@ class ECindex:
         return self._smooth_kernel
 
     @smooth_kernel.setter
-    def smooth_kernel(self, smooth_kernel: List) -> None:
+    def smooth_kernel(self, smooth_kernel: list) -> None:
         """
         Set a new smooth kernel to be applied to the first two pcs
         """
