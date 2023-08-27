@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import pytest
 import xarray as xr
+from xarray.core.variable import MissingDimensionsError
 
 import xenso
 
@@ -29,3 +31,10 @@ def test_compute_anomaly():
 
     result = xenso.compute_anomaly(data, base_period=("2000-01-01", "2005-12-31"))
     xr.testing.assert_equal(result, expected)
+
+    # test error
+    with pytest.raises(ValueError):
+        xenso.compute_anomaly(data)
+
+    with pytest.raises(MissingDimensionsError):
+        xenso.compute_anomaly(data.rename({"time": "month"}), climatology=climatology)
