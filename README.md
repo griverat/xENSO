@@ -1,6 +1,8 @@
 ## xENSO
 
 [![Tests](https://github.com/DangoMelon/xENSO/actions/workflows/tests.yml/badge.svg)](https://github.com/DangoMelon/xENSO/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/DangoMelon/xENSO/graph/badge.svg?token=04AV0EO0MY)](https://codecov.io/gh/DangoMelon/xENSO)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Quick description
 
