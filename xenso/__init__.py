@@ -9,5 +9,5 @@ __all__ = ["compute_climatology", "compute_anomaly", "xconvolve", "indices"]
 
 try:
     from ._version import __version__
-except ImportError:
+except ImportError:  # pragma: no cover
     __version__ = "unknown"
