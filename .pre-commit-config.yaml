@@ -1,7 +1,7 @@
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v5.0.0
   hooks:
     - id: trailing-whitespace
       exclude: tests/data
@@ -15,46 +15,46 @@ repos:
       files: requirements-dev.txt
 
 - repo: https://github.com/econchick/interrogate
-  rev: 1.5.0
+  rev: 1.7.0
   hooks:
     - id: interrogate
       exclude: ^(docs|setup.py|tests)
       args: [--config=pyproject.toml]
 
 - repo: https://github.com/keewis/blackdoc
-  rev: v0.3.8
+  rev: v0.3.9
   hooks:
     - id: blackdoc
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 6.1.0
+  rev: 7.1.1
   hooks:
     - id: flake8
       exclude: docs/source/conf.py
       args: [--max-line-length=105]
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
     - id: isort
       additional_dependencies: [toml]
       args: ["--profile", "black", "--filter-files"]
 
 - repo: https://github.com/psf/black
-  rev: 23.9.1
+  rev: 24.10.0
   hooks:
   - id: black
     language_version: python3
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.5.1
+  rev: v1.11.2
   hooks:
   - id: mypy
     exclude: docs/source/conf.py
     args: [--ignore-missing-imports]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.11.0
+  rev: v3.17.0
   hooks:
     - id: pyupgrade
       args:
@@ -66,7 +66,7 @@ repos:
     - id: add-trailing-comma
 
 - repo: https://github.com/nbQA-dev/nbQA
-  rev: 1.7.0
+  rev: 1.8.7
   hooks:
     - id: nbqa-black
     - id: nbqa-pyupgrade
