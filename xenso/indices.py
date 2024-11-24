@@ -10,7 +10,7 @@ import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
 from eofs.tools.standard import covariance_map
-from xeofs.models import EOF
+from xeofs.single import EOF
 
 from .core import compute_anomaly, compute_climatology, xconvolve
 
@@ -59,7 +59,7 @@ class ECindex:
 
         self.model = EOF(n_modes=2, use_coslat=True)
         self.model.fit(_subset.sel(time=slice(*self.base_period)), dim="time")
-        self._scale = self.model.singular_values() / np.sqrt(
+        self._scale = 1 / np.sqrt(
             self.model.explained_variance(),
         )
         self.anom_pcs = self.model.transform(_subset) * self._scale
