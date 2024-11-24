@@ -8,7 +8,7 @@ import xenso
 
 
 def test_compute_climatology():
-    dates = pd.date_range("1981-01-01", "2010-12-31", freq="M")
+    dates = pd.date_range("1981-01-01", "2010-12-31", freq="ME")
     data = xr.DataArray(np.tile(np.arange(12), 30), coords=[("time", dates)])
 
     result = xenso.compute_climatology(data)
@@ -20,7 +20,7 @@ def test_compute_climatology():
 
 
 def test_compute_anomaly():
-    dates = pd.date_range("1981-01-01", "2010-12-31", freq="M")
+    dates = pd.date_range("1981-01-01", "2010-12-31", freq="ME")
     data = xr.DataArray(np.tile(np.arange(12), 30), coords=[("time", dates)])
     climatology = xr.DataArray(np.arange(12), coords=[("month", np.arange(1, 13))])
 
