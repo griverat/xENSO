@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
-from eofs.tools.standard import covariance_map
 from xeofs.single import EOF
 
 from .core import compute_anomaly, compute_climatology, xconvolve
@@ -194,16 +193,21 @@ class ECindex:
         """
         Return the E and C patterns
         """
-        _subsetEC = self.ecindex.sel(time=slice(*self.base_period))
-        _indexdata = xr.concat([_subsetEC.E_index, _subsetEC.C_index], dim="mode").T
-        reg_map = covariance_map(
-            _indexdata.data,
-            self.sst_data.sel(time=slice(*self.base_period)).data,
-        ) / np.expand_dims(_indexdata.std(dim="time").data, axis=[1, 2])
+        ec_clim_period = xr.concat(
+            [self.ecindex.E_index, self.ecindex.C_index],
+            dim="mode",
+        ).sel(time=slice(*self.base_period))
+        cov = xr.cov(
+            ec_clim_period,
+            self.sst_data.sel(time=slice(*self.base_period)),
+            dim="time",
+        )
+        std = ec_clim_period.std("time")
+        reg = cov / std
         pattern = xr.Dataset(
             data_vars=dict(
-                E_pattern=(["lat", "lon"], reg_map[0]),
-                C_pattern=(["lat", "lon"], reg_map[1]),
+                E_pattern=(["lat", "lon"], reg.sel(mode=0).data),
+                C_pattern=(["lat", "lon"], reg.sel(mode=1).data),
             ),
             coords={"lat": self.sst_data.lat, "lon": self.sst_data.lon},
             attrs=dict(description="E and C regression patterns"),
