@@ -1,4 +1,3 @@
-eofs
 matplotlib
 netcdf4
 numpy

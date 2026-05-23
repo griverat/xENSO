@@ -1,23 +1,77 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=77", "setuptools-scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.interrogate]
-ignore-init-method = true
-ignore-init-module = false
-ignore-magic = false
-ignore-semiprivate = false
-ignore-private = false
-ignore-module = false
-fail-under = 95
-exclude = ["setup.py", "docs", "tests", "*_version.py"]
-verbose = 1
-quiet = false
-color = true
+[project]
+name = "xenso"
+description = "ENSO indices using xarray structures"
+authors = [
+    {name = "Gerardo Rivera", email = "gerardo_art@me.com"},
+]
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "xarray>=2023.6",
+    "xeofs>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "pytest-xdist",
+    "pre-commit",
+]
+
+[tool.setuptools.packages.find]
+include = ["xenso*"]
+
+[project.urls]
+Homepage = "https://github.com/DangoMelon/xENSO"
+
+[tool.setuptools_scm]
+write_to = "xenso/_version.py"
+write_to_template = '__version__ = "{version}"'
+tag_regex = '^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$'
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = " -v -n auto --cov-report term-missing --cov-report xml --cov xenso"
-testpaths = [
-    "tests",
+minversion = "7.0"
+addopts = ["-v", "-n", "auto", "--cov-report=term-missing", "--cov-report=xml", "--cov=xenso"]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::FutureWarning:xeofs",
+    "ignore::PendingDeprecationWarning:xeofs",
+    "ignore::RuntimeWarning:importlib",
 ]
+
+[tool.ruff]
+line-length = 105
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "I"]
+ignore = ["E203", "E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.coverage.run]
+source = ["xenso"]
+omit = ["xenso/_version.py"]

@@ -1,7 +1,7 @@
 repos:
 
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v5.0.0
   hooks:
     - id: trailing-whitespace
       exclude: tests/data
@@ -9,29 +9,9 @@ repos:
     - id: debug-statements
     - id: end-of-file-fixer
 
-- repo: https://github.com/PyCQA/flake8
-  rev: 6.1.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.8.4
   hooks:
-    - id: flake8
-      exclude: docs/source/conf.py
-      args: [--max-line-length=105]
-
-- repo: https://github.com/pycqa/isort
-  rev: 5.12.0
-  hooks:
-    - id: isort
-      additional_dependencies: [toml]
-      args: ["--profile", "black", "--filter-files"]
-
-- repo: https://github.com/psf/black
-  rev: 23.9.1
-  hooks:
-  - id: black
-    language_version: python3
-
-- repo: https://github.com/asottile/pyupgrade
-  rev: v3.11.0
-  hooks:
-    - id: pyupgrade
-      args:
-        - --py39-plus
+    - id: ruff
+      args: ["--fix"]
+    - id: ruff-format
