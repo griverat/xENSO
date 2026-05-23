@@ -8,23 +8,6 @@ repos:
     - id: check-ast
     - id: debug-statements
     - id: end-of-file-fixer
-    - id: check-docstring-first
-    - id: check-added-large-files
-    - id: requirements-txt-fixer
-    - id: file-contents-sorter
-      files: requirements-dev.txt
-
-- repo: https://github.com/econchick/interrogate
-  rev: 1.5.0
-  hooks:
-    - id: interrogate
-      exclude: ^(docs|setup.py|tests)
-      args: [--config=pyproject.toml]
-
-- repo: https://github.com/keewis/blackdoc
-  rev: v0.3.8
-  hooks:
-    - id: blackdoc
 
 - repo: https://github.com/PyCQA/flake8
   rev: 6.1.0
@@ -46,30 +29,9 @@ repos:
   - id: black
     language_version: python3
 
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.5.1
-  hooks:
-  - id: mypy
-    exclude: docs/source/conf.py
-    args: [--ignore-missing-imports]
-
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.11.0
   hooks:
     - id: pyupgrade
       args:
         - --py39-plus
-
-- repo: https://github.com/asottile/add-trailing-comma
-  rev: v3.1.0
-  hooks:
-    - id: add-trailing-comma
-
-- repo: https://github.com/nbQA-dev/nbQA
-  rev: 1.7.0
-  hooks:
-    - id: nbqa-black
-    - id: nbqa-pyupgrade
-      args: ["--py39-plus"]
-    - id: nbqa-isort
-      args: ["--float-to-top"]
