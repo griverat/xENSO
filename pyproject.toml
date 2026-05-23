@@ -38,6 +38,7 @@ dev = [
     "pytest-cov",
     "pytest-xdist",
     "pre-commit",
+    "ruff",
 ]
 
 [tool.setuptools.packages.find]
