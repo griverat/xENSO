@@ -4,8 +4,6 @@ ioos_pkg_skeleton
 My awesome ioos_pkg_skeleton
 """
 
-from typing import Optional
-
 import xarray as xr
 from scipy.ndimage import convolve1d
 
@@ -31,8 +29,8 @@ def compute_climatology(
 
 def compute_anomaly(
     data: xr.DataArray,
-    climatology: Optional[xr.DataArray] = None,
-    base_period: Optional[tuple[str, str]] = None,
+    climatology: xr.DataArray | None = None,
+    base_period: tuple[str, str] | None = None,
 ) -> xr.DataArray:
     """
     Computes the anomaly of a field in the time dimension
@@ -53,7 +51,7 @@ def compute_anomaly(
 def xconvolve(
     data: xr.DataArray,
     kernel: xr.DataArray,
-    dim: Optional[str] = None,
+    dim: str | None = None,
 ) -> xr.DataArray:
     """
     Convolution using xarray data structures by using

@@ -3,8 +3,6 @@ Module containing the definitions and methods to compute
 a variety of indices used to study ENSO
 """
 
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -23,12 +21,12 @@ class ECindex:
         self,
         sst_data: xr.DataArray,
         isanomaly: bool = False,
-        lat_range: Optional[tuple[float, float]] = (-10, 10),
-        long_range: Optional[tuple[float, float]] = (110, 290),
-        climatology: Optional[xr.DataArray] = None,
+        lat_range: tuple[float, float] | None = (-10, 10),
+        long_range: tuple[float, float] | None = (110, 290),
+        climatology: xr.DataArray | None = None,
         base_period: tuple[str, str] = ("1979-01-01", "2009-12-30"),
-        corr_factor: Optional[list[int]] = None,
-        smooth_kernel: list[int] = [1, 2, 1],
+        corr_factor: list[int] | None = None,
+        smooth_kernel: list[int] | None = None,
     ):
         self.sst_data = sst_data
         self.lat_range = lat_range
@@ -40,7 +38,7 @@ class ECindex:
         if not isanomaly:
             self.sst_data = compute_anomaly(self.sst_data, self.climatology)
         self._compute_pcs()
-        self.smooth_kernel = smooth_kernel
+        self.smooth_kernel = smooth_kernel if smooth_kernel is not None else [1, 2, 1]
         if corr_factor is None:
             self.corr_factor = [1, 1]
             self._auto_corr_factor()

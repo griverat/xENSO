@@ -1,11 +1,14 @@
 """
 Utility module containing functions to preprocess the ingested data
 """
+
 import xarray as xr
 from xarray.core.variable import MissingDimensionsError
 
 
-def _check_dimensions(data: xr.DataArray, extra_dims: list[str] = []) -> None:
+def _check_dimensions(data: xr.DataArray, extra_dims: list[str] | None = None) -> None:
+    if extra_dims is None:
+        extra_dims = []
     """
     Function to test if time dimension + any extra dimension is present
     in the DataArray
