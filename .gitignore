@@ -10,3 +10,4 @@ dist/
 docs/source/tutorial.ipynb
 xenso/_version.py
 coverage.xml
+.DS_Store
