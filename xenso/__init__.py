@@ -2,7 +2,7 @@
 
 from .core import compute_anomaly, compute_climatology, xconvolve
 from .ecindex import ECindex
-from .regions import nino_regions
+from .regions import nino_regions, oni, roni
 
 __all__ = [
     "compute_climatology",
@@ -10,6 +10,8 @@ __all__ = [
     "xconvolve",
     "ECindex",
     "nino_regions",
+    "oni",
+    "roni",
 ]
 
 try:

@@ -7,6 +7,7 @@ import xarray as xr
 from xeofs.single import EOF
 
 from .core import compute_anomaly, compute_climatology, xconvolve
+from .preprocessing import normalize_coords
 
 
 class ECindex:
@@ -44,7 +45,7 @@ class ECindex:
             self.corr_factor = corr_factor
 
     def _compute_pcs(self) -> None:
-        _subset = self.sst_data.sortby(["lat", "lon"]).sel(
+        _subset = normalize_coords(self.sst_data).sel(
             lat=slice(*self.lat_range),  # type: ignore[misc]
             lon=slice(*self.long_range),  # type: ignore[misc]
         )
