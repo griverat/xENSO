@@ -4,3 +4,4 @@ pytest-xdist
 pre-commit
 ruff
 setuptools_scm
+ipykernel
