@@ -15,6 +15,13 @@ from .diagnostics import (
 )
 from .ecindex import ECindex
 from .events import composite, detect_events, event_duration, event_windows, seasonal_series
+from .metrics import (
+    enso_lifecycle_rmse,
+    enso_pattern_rmse,
+    enso_teleconnection,
+    mean_state_rmse,
+    seasonal_cycle_rmse,
+)
 from .regions import REGIONS, nino_regions, oni, region_mean, roni
 from .stats import compare, linregress, rmse, split_regression
 
@@ -49,6 +56,11 @@ __all__ = [
     "thermocline_feedback",
     "wind_ssh_feedback",
     "ocean_driven_sst_change",
+    "mean_state_rmse",
+    "seasonal_cycle_rmse",
+    "enso_pattern_rmse",
+    "enso_lifecycle_rmse",
+    "enso_teleconnection",
 ]
 
 try:
