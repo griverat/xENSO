@@ -78,3 +78,41 @@ class TestRONI:
         roni_std = roni.groupby("time.month").std("time")
         oni_std = oni.groupby("time.month").std("time")
         xr.testing.assert_allclose(roni_std, oni_std, rtol=1e-1)
+
+
+class TestRegionMean:
+    @pytest.fixture(scope="class")
+    def abs_lat(self):
+        lat = np.arange(-89.5, 90)
+        return xr.DataArray(
+            np.tile(np.abs(lat)[:, None], (1, 360)),
+            dims=["lat", "lon"],
+            coords={"lat": lat, "lon": np.arange(0.5, 360)},
+        )
+
+    def test_nino_boxes_match(self):
+        for key in ["12", "3", "34", "4"]:
+            assert xenso.REGIONS[f"nino{key}"] == xenso.regions._REGIONS[key]
+
+    def test_weighted(self, abs_lat):
+        result = xenso.region_mean(abs_lat, "nino3_latext")
+        lat = np.arange(-14.5, 15)
+        np.testing.assert_allclose(result, np.average(np.abs(lat), weights=np.cos(np.deg2rad(lat))))
+        np.testing.assert_allclose(xenso.region_mean(abs_lat, "nino3_latext", weighted=False), 7.5)
+
+    def test_nino_regions_weighted(self, abs_lat):
+        xr.testing.assert_allclose(
+            xenso.nino_regions(abs_lat, "3", weighted=True), xenso.region_mean(abs_lat, "nino3")
+        )
+        assert xenso.nino_regions(abs_lat, "3") != xenso.region_mean(abs_lat, "nino3")
+
+    def test_skips_missing(self, abs_lat):
+        masked = abs_lat.where(abs_lat.lon < 200)
+        xr.testing.assert_allclose(
+            xenso.region_mean(masked, "equatorial_pacific"),
+            xenso.region_mean(abs_lat.sel(lon=slice(150, 200)), "equatorial_pacific"),
+        )
+
+    def test_unknown_region(self, abs_lat):
+        with pytest.raises(ValueError):
+            xenso.region_mean(abs_lat, "atlantic")
