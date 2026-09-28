@@ -1,6 +1,18 @@
 """xenso — ENSO indices and operations using xarray structures."""
 
 from .core import compute_anomaly, compute_climatology, detrend, smooth, xconvolve
+from .diagnostics import (
+    bjerknes_feedback,
+    enso_amplitude,
+    enso_diversity,
+    enso_duration,
+    enso_seasonality,
+    enso_skewness,
+    heat_flux_feedback,
+    ocean_driven_sst_change,
+    thermocline_feedback,
+    wind_ssh_feedback,
+)
 from .ecindex import ECindex
 from .events import composite, detect_events, event_duration, event_windows, seasonal_series
 from .regions import REGIONS, nino_regions, oni, region_mean, roni
@@ -27,6 +39,16 @@ __all__ = [
     "split_regression",
     "rmse",
     "compare",
+    "enso_amplitude",
+    "enso_seasonality",
+    "enso_skewness",
+    "enso_duration",
+    "enso_diversity",
+    "bjerknes_feedback",
+    "heat_flux_feedback",
+    "thermocline_feedback",
+    "wind_ssh_feedback",
+    "ocean_driven_sst_change",
 ]
 
 try:

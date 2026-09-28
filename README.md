@@ -36,7 +36,7 @@ xenso.meaning_of_life_url()
 
 ### Relation to the CLIVAR ENSO Metrics Package
 
-Parts of xENSO (`xenso.events`, `xenso.stats`, `xenso.smooth`, `xenso.detrend`
+Parts of xENSO (`xenso.diagnostics`, `xenso.events`, `xenso.stats`, `xenso.smooth`, `xenso.detrend`
 and the boxes in `xenso.REGIONS`) re-implement diagnostics defined by the
 [CLIVAR ENSO Metrics Package](https://github.com/CLIVAR-PRP/enso_metrics)
 (Planton et al., 2021, [doi:10.1175/BAMS-D-19-0337.A](https://doi.org/10.1175/BAMS-D-19-0337.A))

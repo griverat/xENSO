@@ -19,6 +19,7 @@ def linregress(
     x: xr.DataArray,
     dim: str = "time",
     sign: Literal["positive", "negative"] | None = None,
+    fit_intercept: bool = True,
 ) -> xr.Dataset:
     """
     Ordinary least-squares regression of ``y`` on ``x`` along ``dim``.
@@ -37,6 +38,9 @@ def linregress(
     sign
         Only use the points where ``x > 0`` ("positive") or ``x < 0``
         ("negative"), as in CLIVAR's CustomLinearRegression.
+    fit_intercept
+        If False, fit ``y = slope * x`` through the origin; the intercept is 0
+        and the standard error uses ``n - 1`` degrees of freedom.
 
     Returns
     -------
@@ -53,16 +57,17 @@ def linregress(
 
     x, y = x.where(valid), y.where(valid)
     n = valid.sum(dim)
-    dx = x - x.mean(dim)
-    dy = y - y.mean(dim)
+    dx = x - x.mean(dim) if fit_intercept else x
+    dy = y - y.mean(dim) if fit_intercept else y
     sxx = (dx**2).sum(dim)
     sxy = (dx * dy).sum(dim)
     syy = (dy**2).sum(dim)
 
     slope = (sxy / sxx).where((n >= 2) & (sxx > 0))
-    intercept = y.mean(dim) - slope * x.mean(dim)
+    intercept = y.mean(dim) - slope * x.mean(dim) if fit_intercept else xr.zeros_like(slope)
     residual = (syy - slope * sxy).clip(min=0)
-    stderr = np.sqrt(residual / (n - 2) / sxx).where(n > 2)
+    dof = n - 2 if fit_intercept else n - 1
+    stderr = np.sqrt(residual / dof / sxx).where(dof > 0)
     return xr.Dataset({"slope": slope, "intercept": intercept, "stderr": stderr})
 
 
@@ -138,8 +143,8 @@ def rmse(
 
 
 def compare(
-    model: Number,
-    obs: Number,
+    model: Number | xr.Dataset,
+    obs: Number | xr.Dataset,
     method: Literal[
         "difference", "ratio", "relative_difference", "abs_relative_difference"
     ] = "abs_relative_difference",
@@ -152,7 +157,9 @@ def compare(
     Parameters
     ----------
     model, obs
-        Diagnostic values, e.g. the Niño 3.4 standard deviation.
+        Diagnostic values, e.g. the Niño 3.4 standard deviation, or Datasets
+        returned by the functions in :mod:`xenso.diagnostics`, whose ``value``
+        and ``error`` variables are then used.
     method
         "difference": model - obs
         "ratio": model / obs
@@ -168,6 +175,11 @@ def compare(
     -------
     The metric value and its error (None if either input error is None).
     """
+    if isinstance(model, xr.Dataset):
+        model, model_err = model["value"], model.get("error")
+    if isinstance(obs, xr.Dataset):
+        obs, obs_err = obs["value"], obs.get("error")
+
     if method == "difference":
         value = model - obs
     elif method == "ratio":

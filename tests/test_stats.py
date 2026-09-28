@@ -133,3 +133,21 @@ class TestCompare:
     def test_unknown_method(self):
         with pytest.raises(ValueError):
             xenso.compare(1.0, 1.0, method="distance")
+
+
+def test_linregress_without_intercept(xy):
+    x, y = xy
+    result = xenso.linregress(y, x, fit_intercept=False)
+    slope = (x * y).sum() / (x**2).sum()
+    residual = ((y - slope * x) ** 2).sum()
+    np.testing.assert_allclose(result.slope, slope)
+    np.testing.assert_allclose(result.intercept, 0)
+    np.testing.assert_allclose(result.stderr, np.sqrt(residual / (x.size - 1) / (x**2).sum()))
+
+
+def test_compare_datasets():
+    model = xr.Dataset({"value": 1.2, "error": 0.1})
+    obs = xr.Dataset({"value": 0.9, "error": 0.05})
+    value, error = xenso.compare(model, obs, method="difference")
+    np.testing.assert_allclose([value, error], [0.3, 0.15])
+    assert xenso.compare(xr.Dataset({"value": 1.0}), obs)[1] is None
