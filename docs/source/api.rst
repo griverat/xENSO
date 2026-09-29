@@ -1,27 +1,49 @@
 API
 ===
 
-:mod:`xENSO` core
------------------
-.. automodule:: xenso
+All functions below are available from the top-level ``xenso`` namespace.
+
+Anomalies and filters
+---------------------
+
+.. automodule:: xenso.core
    :members:
-   :undoc-members:
-   :show-inheritance:
 
+Regions and indices
+-------------------
 
-Indices
--------
-
-.. automodule:: xenso.indices
+.. automodule:: xenso.regions
    :members:
-   :undoc-members:
-   :show-inheritance:
 
-
-Utils
------
-
-.. automodule:: xenso.utils
+.. automodule:: xenso.ecindex
    :members:
-   :undoc-members:
-   :show-inheritance:
+
+ENSO events
+-----------
+
+.. automodule:: xenso.events
+   :members:
+
+Statistics
+----------
+
+.. automodule:: xenso.stats
+   :members:
+
+ENSO diagnostics
+----------------
+
+.. automodule:: xenso.diagnostics
+   :members:
+
+Model-observation metrics
+-------------------------
+
+.. automodule:: xenso.metrics
+   :members:
+
+Metrics collections
+-------------------
+
+.. automodule:: xenso.collection
+   :members: clivar_collection

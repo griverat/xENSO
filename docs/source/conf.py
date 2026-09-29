@@ -18,6 +18,9 @@
 #
 # import os
 # import sys
+import shutil
+from pathlib import Path
+
 # sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -38,6 +41,15 @@ extensions = [
     "numpydoc",
     "myst_nb",
 ]
+
+# numpydoc: do not list class members in autosummary tables (no stub pages are generated)
+numpydoc_show_class_members = False
+
+# The tutorial lives in notebooks/; copy it here so it can be rendered, without executing it
+shutil.copy(
+    Path(__file__).parent / "../../notebooks/tutorial.ipynb", Path(__file__).parent / "tutorial.ipynb"
+)
+nb_execution_mode = "off"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -71,12 +83,12 @@ release = VERSION
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ["how2package4ioos.md"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"

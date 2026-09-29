@@ -14,6 +14,7 @@ This project will eventually add more indices as I come across them.
    :caption: Contents:
 
    tutorial.ipynb
+   enso_metrics
    api
 
 Indices and tables

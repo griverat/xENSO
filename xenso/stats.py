@@ -164,7 +164,7 @@ def compare(
         "difference": model - obs
         "ratio": model / obs
         "relative_difference": (model - obs) / obs
-        "abs_relative_difference": 100 * |model - obs| / |obs|, the default
+        "abs_relative_difference": ``100 * abs(model - obs) / abs(obs)``, the default
         for scalar metrics in the CLIVAR collections.
     model_err, obs_err
         Optional errors on the diagnostics, propagated linearly. For ratios
