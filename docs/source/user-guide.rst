@@ -6,3 +6,4 @@ User guide
 
    ENSO indices <tutorial>
    enso_metrics
+   Evaluating a model <model_evaluation>

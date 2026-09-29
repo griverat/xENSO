@@ -32,6 +32,9 @@ Inputs
 Usage
 -----
 
+:doc:`model_evaluation` walks through these functions with a CMIP6 model and
+HadISST.
+
 Diagnostics of one dataset return a Dataset with ``value`` and, where CLIVAR
 defines one, ``error``. :func:`xenso.compare` turns a model and an observed
 diagnostic into a metric:
