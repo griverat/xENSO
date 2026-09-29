@@ -1,7 +1,8 @@
-"""Region-based ENSO indices (Niño 1+2, 3, 3.4, 4, ONI, rONI)."""
+"""Region-based ENSO indices (Niño 1+2, 3, 3.4, 4, ONI, rONI) and box averages."""
 
 from typing import Literal
 
+import numpy as np
 import xarray as xr
 
 from .core import compute_anomaly
@@ -16,10 +17,57 @@ _REGIONS: dict[str, dict] = {
 
 _TROPICAL_DOMAIN = {"lat": slice(-20, 20)}
 
+# Boxes used by the CLIVAR ENSO Metrics Package (EnsoCollectionsLib.ReferenceRegions)
+REGIONS: dict[str, dict] = {
+    "global": {"lat": slice(-60, 60), "lon": slice(0, 360)},
+    "tropical_pacific": {"lat": slice(-30, 30), "lon": slice(120, 280)},
+    "equatorial_pacific": {"lat": slice(-5, 5), "lon": slice(150, 270)},
+    "equatorial_pacific_latext": {"lat": slice(-15, 15), "lon": slice(150, 270)},
+    "equatorial_pacific_latext2": {"lat": slice(-15, 15), "lon": slice(120, 285)},
+    "western_equatorial_pacific": {"lat": slice(-5, 5), "lon": slice(120, 205)},
+    "eastern_equatorial_pacific": {"lat": slice(-5, 5), "lon": slice(205, 280)},
+    "nino12": _REGIONS["12"],
+    "nino3": _REGIONS["3"],
+    "nino3_latext": {"lat": slice(-15, 15), "lon": slice(210, 270)},
+    "nino34": _REGIONS["34"],
+    "nino4": _REGIONS["4"],
+}
+
+
+def _box_mean(data: xr.DataArray, box: dict, weighted: bool) -> xr.DataArray:
+    subset = normalize_coords(data).sel(**box)
+    if weighted:
+        subset = subset.weighted(np.cos(np.deg2rad(subset.lat)))
+    return subset.mean(dim=["lat", "lon"])
+
+
+def region_mean(
+    data: xr.DataArray,
+    region: str,
+    weighted: bool = True,
+) -> xr.DataArray:
+    """
+    Compute the spatial mean over one of the boxes in ``REGIONS``.
+
+    Parameters
+    ----------
+    data
+        DataArray with lat/lon dimensions.
+    region
+        Key of ``REGIONS``, e.g. "equatorial_pacific" or "nino3".
+    weighted
+        Weight by cos(latitude). Missing values are skipped and the weights
+        renormalized.
+    """
+    if region not in REGIONS:
+        raise ValueError(f"unknown region {region!r}, expected one of {sorted(REGIONS)}")
+    return _box_mean(data, REGIONS[region], weighted)
+
 
 def nino_regions(
     data: xr.DataArray,
     region: Literal["12", "3", "34", "4"] = "34",
+    weighted: bool = False,
 ) -> xr.DataArray:
     """
     Compute the spatial mean over the selected El Niño region.
@@ -30,8 +78,10 @@ def nino_regions(
         DataArray with lat/lon dimensions.
     region
         El Niño region: "12", "3", "34", or "4".
+    weighted
+        Weight by cos(latitude), as done in the CLIVAR ENSO Metrics Package.
     """
-    return normalize_coords(data).sel(**_REGIONS[region]).mean(dim=["lat", "lon"])
+    return _box_mean(data, _REGIONS[region], weighted)
 
 
 def oni(

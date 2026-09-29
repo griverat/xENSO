@@ -1,6 +1,6 @@
-matplotlib
+matplotlib>=3.10
 netcdf4
-numpy
-scipy
-xarray
-xeofs
+numpy>=2.2
+scipy>=1.15
+xarray>=2024.10
+xeofs>=3.0

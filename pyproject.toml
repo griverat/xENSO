@@ -10,26 +10,25 @@ authors = [
 ]
 readme = "README.md"
 license = "BSD-3-Clause"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
 ]
 dynamic = ["version"]
 dependencies = [
-    "numpy>=1.26",
-    "scipy>=1.11",
-    "matplotlib>=3.8",
-    "xarray>=2023.6",
-    "xeofs>=2.0",
+    "numpy>=2.2",
+    "scipy>=1.15",
+    "matplotlib>=3.10",
+    "xarray>=2024.10",
+    "xeofs>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -64,7 +63,7 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 105
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "UP", "I"]

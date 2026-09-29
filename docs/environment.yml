@@ -13,9 +13,9 @@ dependencies:
   - netCDF4
   - bottleneck
   - coverage
-  - numpydoc
   - sphinx
-  - sphinx-book-theme
+  - pydata-sphinx-theme
+  - sphinx-design
   - sphinx-copybutton
   - myst-parser
   - myst-nb
