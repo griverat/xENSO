@@ -1,11 +1,13 @@
 """xenso — ENSO indices and operations using xarray structures."""
 
+from .collection import COLLECTIONS, clivar_collection
 from .core import compute_anomaly, compute_climatology, detrend, smooth, xconvolve
 from .diagnostics import (
     bjerknes_feedback,
     enso_amplitude,
     enso_diversity,
     enso_duration,
+    enso_event_duration,
     enso_seasonality,
     enso_skewness,
     heat_flux_feedback,
@@ -56,11 +58,14 @@ __all__ = [
     "thermocline_feedback",
     "wind_ssh_feedback",
     "ocean_driven_sst_change",
+    "enso_event_duration",
     "mean_state_rmse",
     "seasonal_cycle_rmse",
     "enso_pattern_rmse",
     "enso_lifecycle_rmse",
     "enso_teleconnection",
+    "clivar_collection",
+    "COLLECTIONS",
 ]
 
 try:

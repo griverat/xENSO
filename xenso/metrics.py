@@ -21,8 +21,8 @@ import numpy as np
 import xarray as xr
 
 from .core import detrend
-from .diagnostics import _anomalies, _result, enso_duration
-from .events import seasonal_series
+from .diagnostics import EnsoKind, _anomalies, _lifecycle, _prefix, _result
+from .events import detect_events, seasonal_series
 from .preprocessing import normalize_coords
 from .regions import REGIONS
 from .stats import linregress, rmse
@@ -136,14 +136,24 @@ def seasonal_cycle_rmse(
     return _section_rmse(model, obs, along, name, units)
 
 
-def _enso_regression(sst, field, index_region, field_region, season, smoothing) -> xr.DataArray:
-    """Regression, without intercept, of the seasonal field anomaly onto the seasonal index."""
-    index = seasonal_series(_anomalies(sst, index_region, smoothing), season)
+def _enso_pattern(
+    sst, field, index_region, field_region, season, smoothing, kind, threshold
+) -> xr.DataArray:
+    """
+    ENSO pattern of the seasonal field anomaly: its regression, without intercept, onto the
+    seasonal index ("enso"), or its composite over El Niño ("nino") or La Niña ("nina") events.
+    """
+    index = _anomalies(sst, index_region, smoothing)
     if field_region is not None:
         field = _box(field, field_region)
     anomalies = seasonal_series(_anomalies(field, smoothing=smoothing), season)
-    index, anomalies = index - index.mean("year"), anomalies - anomalies.mean("year")
-    return linregress(anomalies, index, dim="year", fit_intercept=False).slope
+    anomalies = anomalies - anomalies.mean("year")
+    if kind == "enso":
+        peak = seasonal_series(index, season)
+        peak = peak - peak.mean("year")
+        return linregress(anomalies, peak, dim="year", fit_intercept=False).slope
+    events = detect_events(index, threshold=threshold, season=season, kind=kind)
+    return anomalies.sel(year=events.year).mean("year")
 
 
 def enso_pattern_rmse(
@@ -156,14 +166,18 @@ def enso_pattern_rmse(
     season: str | int = "DEC",
     smoothing: int | None = 5,
     variable: str | None = "sst",
+    kind: EnsoKind = "enso",
+    threshold: float = 0.75,
 ) -> xr.Dataset:
     """
     RMSE of the zonal pattern of ENSO along the equator
-    (CLIVAR: EnsoSstLonRmse, and EnsoPrLonRmse or EnsoTauxLonRmse with another field).
+    (CLIVAR: EnsoSstLonRmse, NinoSstLonRmse, NinaSstLonRmse, and EnsoPrLonRmse
+    or EnsoTauxLonRmse with another field).
 
     The seasonal anomaly of the field, averaged over latitude, is regressed
-    without intercept onto the seasonal Niño 3.4 SST anomaly, and the RMSE of
-    the regression coefficients is taken along longitude.
+    without intercept onto the seasonal Niño 3.4 SST anomaly ("enso"), or
+    averaged over the El Niño ("nino") or La Niña ("nina") events of each
+    dataset, and the RMSE of the resulting profiles is taken along longitude.
 
     Parameters
     ----------
@@ -182,44 +196,83 @@ def enso_pattern_rmse(
         Length of the triangular running mean in time, or None.
     variable
         Name used in ``clivar_name``.
+    kind
+        "enso" for the regression, "nino" or "nina" for event composites.
+    threshold
+        Event threshold in standard deviations, for "nino" and "nina".
     """
+    prefix = _prefix(kind)
     model_field = model_sst if model_field is None else model_field
     obs_field = obs_sst if obs_field is None else obs_field
 
     def pattern(sst, field):
         section = _meridional_mean(_box(field, region))
-        return _enso_regression(sst, section, index_region, None, season, smoothing)
+        return _enso_pattern(sst, section, index_region, None, season, smoothing, kind, threshold)
 
     model, obs = _same_grid(pattern(model_sst, model_field), pattern(obs_sst, obs_field))
-    name = _clivar_name("Enso", variable, "LonRmse")
+    name = _clivar_name(prefix, variable, "LonRmse")
     return _result(rmse(model, obs, dim="lon"), name, model=model, obs=obs)
 
 
 def enso_lifecycle_rmse(
     model_sst: xr.DataArray,
     obs_sst: xr.DataArray,
+    model_field: xr.DataArray | None = None,
+    obs_field: xr.DataArray | None = None,
     region: str = "nino34",
+    field_region: str | None = None,
     month: int = 12,
     window: int = 6,
     smoothing: int | None = 5,
+    variable: str | None = "sst",
+    kind: EnsoKind = "enso",
+    threshold: float = 0.75,
 ) -> xr.Dataset:
     """
-    RMSE of the ENSO life cycle (CLIVAR: EnsoSstTsRmse).
+    RMSE of the ENSO life cycle (CLIVAR: EnsoSstTsRmse, NinoSstTsRmse,
+    NinaSstTsRmse, and EnsoPrTsRmse or EnsoTauxTsRmse with another field).
 
-    The life cycles are the lagged regressions of :func:`xenso.enso_duration`.
+    The life cycle is the monthly anomaly of the field, averaged over
+    ``field_region``, around each year: regressed without intercept onto the
+    Niño 3.4 SST anomaly in ``month`` ("enso", as in :func:`xenso.enso_duration`),
+    or averaged over the El Niño ("nino") or La Niña ("nina") events of each
+    dataset. The RMSE is taken along the lag.
 
     Parameters
     ----------
     model_sst, obs_sst
         Monthly SST with time, lat and lon dimensions. They do not need to
         share a grid.
-    region, month, window, smoothing
+    model_field, obs_field
+        Monthly fields whose life cycle is compared. Default to the SST.
+        CLIVAR uses precipitation in "nino3" and zonal wind stress in "nino4".
+    region
+        Box of :data:`xenso.REGIONS` of the index.
+    field_region
+        Box of :data:`xenso.REGIONS` of the field. Defaults to ``region``.
+    month, window, smoothing
         See :func:`xenso.enso_duration`.
+    variable
+        Name used in ``clivar_name``.
+    kind
+        "enso" for the regression, "nino" or "nina" for event composites.
+    threshold
+        Event threshold in standard deviations, for "nino" and "nina".
     """
-    kwargs = dict(region=region, month=month, window=window, smoothing=smoothing)
-    model = enso_duration(model_sst, **kwargs).lifecycle
-    obs = enso_duration(obs_sst, **kwargs).lifecycle
-    return _result(rmse(model, obs, dim="lag"), "EnsoSstTsRmse", model=model, obs=obs)
+    prefix = _prefix(kind)
+    kwargs = dict(
+        region=region,
+        field_region=field_region,
+        month=month,
+        window=window,
+        smoothing=smoothing,
+        kind=kind,
+        threshold=threshold,
+    )
+    model = _lifecycle(model_sst, model_field, **kwargs)
+    obs = _lifecycle(obs_sst, obs_field, **kwargs)
+    name = _clivar_name(prefix, variable, "TsRmse")
+    return _result(rmse(model, obs, dim="lag"), name, model=model, obs=obs)
 
 
 def _outside_box(data: xr.DataArray, box: dict) -> xr.DataArray:
@@ -257,14 +310,19 @@ def enso_teleconnection(
     keep: xr.DataArray | None = None,
     weighted: bool = False,
     variable: str | None = "sst",
+    kind: EnsoKind = "enso",
+    threshold: float = 0.75,
 ) -> xr.Dataset:
     """
     Comparison of ENSO teleconnection maps
-    (CLIVAR: EnsoSstMapDjf, EnsoSstMapJja, EnsoPrMapDjf, EnsoPrMapJja).
+    (CLIVAR: EnsoSstMapDjf, EnsoSstMapJja, EnsoPrMapDjf, EnsoPrMapJja,
+    EnsoSlpMapDjf, EnsoSlpMapJja, and the NinoSstMap, NinaSstMap,
+    NinoPrMap, ... composites).
 
     The seasonal anomaly of the field is regressed without intercept onto the
-    seasonal Niño 3.4 SST anomaly of the same season, without smoothing. The
-    maps are compared where both are valid and outside the equatorial
+    seasonal Niño 3.4 SST anomaly of the same season ("enso"), or averaged
+    over the El Niño ("nino") or La Niña ("nina") events of each dataset,
+    detected in that season, without smoothing. The maps are compared where both are valid and outside the equatorial
     Pacific, giving the RMSE (``value``), pattern correlation and ratio of
     spatial standard deviations, e.g. for a Taylor diagram.
 
@@ -289,18 +347,24 @@ def enso_teleconnection(
     weighted
         Weight the statistics by cos(latitude). CLIVAR does not.
     variable
-        Name used in ``clivar_name``.
+        Name used in ``clivar_name``, e.g. "pr" or "slp".
+    kind
+        "enso" for the regression, "nino" or "nina" for event composites.
+    threshold
+        Event threshold in standard deviations, for "nino" and "nina".
     """
+    prefix = _prefix(kind)
     model_field = model_sst if model_field is None else model_field
     obs_field = obs_sst if obs_field is None else obs_field
 
     def regression_map(sst, field):
-        return _enso_regression(sst, field, index_region, region, season, smoothing=None)
+        return _enso_pattern(sst, field, index_region, region, season, None, kind, threshold)
 
     model, obs = _same_grid(regression_map(model_sst, model_field), regression_map(obs_sst, obs_field))
     if keep is None:
         keep = _outside_box(model, _TELECONNECTION_EXCLUDED)
     model, obs = model.where(keep), obs.where(keep)
 
-    name = _clivar_name("Enso", variable, f"Map{str(season).capitalize()}")
+    suffix = f"Map{str(season).capitalize()}" if kind == "enso" else "Map"
+    name = _clivar_name(prefix, variable, suffix)
     return _result(**_pattern_statistics(model, obs, weighted), clivar_name=name, model=model, obs=obs)

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
-from synthetic import LON, event_series, uniform_field, with_seasonal_cycle
+from synthetic import LON, SHAPE, event_series, uniform_field, with_seasonal_cycle
 
 import xenso
 from xenso.metrics import _TELECONNECTION_EXCLUDED, _outside_box
@@ -87,9 +87,22 @@ class TestEnsoPattern:
     def test_other_field(self, series):
         sst = uniform_field(series) * lon_profile()
         result = xenso.enso_pattern_rmse(sst, sst, 3 * sst, sst, variable="taux")
-        np.testing.assert_allclose(result.model, 3 * result.obs)
+        np.testing.assert_allclose(result.model, 3 * result.obs, atol=1e-12)
         np.testing.assert_allclose(result.value, 2 * np.sqrt((result.obs**2).mean()))
         assert result.attrs["clivar_name"] == "EnsoTauxLonRmse"
+
+    @pytest.mark.parametrize("kind,sign", [("nino", 1), ("nina", -1)])
+    def test_composite(self, series, kind, sign):
+        field = uniform_field(series) * lon_profile()
+        result = xenso.enso_pattern_rmse(field, field, kind=kind)
+        # smoothed December value of every event: (0.4 + 1.6 + 3 + 1.6 + 0.4) / 9
+        expected = sign * 7 / 9 * lon_profile().sel(lon=slice(150, 270))
+        np.testing.assert_allclose(result.obs, expected)
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}SstLonRmse"
+
+    def test_invalid_kind(self, series):
+        with pytest.raises(ValueError):
+            xenso.enso_pattern_rmse(uniform_field(series), uniform_field(series), kind="neutral")
 
 
 class TestEnsoLifecycle:
@@ -108,6 +121,23 @@ class TestEnsoLifecycle:
         obs = uniform_field(series)
         result = xenso.enso_lifecycle_rmse(obs.isel(lon=slice(None, None, 2)), obs)
         np.testing.assert_allclose(result.value, 0, atol=1e-12)
+
+    @pytest.mark.parametrize("kind,sign", [("nino", 1), ("nina", -1)])
+    def test_composite(self, series, kind, sign):
+        sst = uniform_field(series)
+        result = xenso.enso_lifecycle_rmse(sst, sst, kind=kind, smoothing=None)
+        np.testing.assert_allclose(result.obs.sel(lag=slice(-3, 3)), sign * SHAPE)
+        np.testing.assert_allclose(result.value, 0)
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}SstTsRmse"
+
+    @pytest.mark.parametrize("kind", ["enso", "nino"])
+    def test_other_field(self, series, kind):
+        sst = uniform_field(series)
+        result = xenso.enso_lifecycle_rmse(
+            sst, sst, 3 * sst, sst, field_region="nino3", variable="pr", kind=kind
+        )
+        np.testing.assert_allclose(result.model, 3 * result.obs, atol=1e-12)
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}PrTsRmse"
 
 
 class TestTeleconnection:
@@ -156,6 +186,16 @@ class TestTeleconnection:
         weights = np.cos(np.deg2rad(diff.lat))
         np.testing.assert_allclose(weighted.value, np.sqrt((diff**2).weighted(weights).mean()))
         assert weighted.value != result.value
+
+    @pytest.mark.parametrize("kind,sign", [("nino", 1), ("nina", -1)])
+    def test_composite(self, sst, pattern, kind, sign):
+        field = sst * pattern
+        result = xenso.enso_teleconnection(sst, sst, 2 * field, field, variable="slp", kind=kind)
+        # DJF mean of every event: (1 + 0.8 + 0.4) / 3
+        expected = sign * 2.2 / 3 * pattern.where(_outside_box(pattern, _TELECONNECTION_EXCLUDED))
+        xr.testing.assert_allclose(result.obs, expected.transpose(*result.obs.dims))
+        np.testing.assert_allclose([result.correlation, result.std_ratio], [1, 2])
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}SlpMap"
 
     def test_different_grids(self, sst):
         with pytest.raises(ValueError, match="same grid"):

@@ -18,14 +18,19 @@ implementation: use the original package for results that must be
 comparable with published CLIVAR ENSO metrics.
 """
 
+from typing import Literal
+
 import numpy as np
 import xarray as xr
 
 from .core import compute_anomaly, detrend, smooth
-from .events import detect_events, event_duration, event_windows, seasonal_series
+from .events import composite, detect_events, event_duration, event_windows, seasonal_series
 from .preprocessing import normalize_coords
 from .regions import REGIONS, region_mean
 from .stats import linregress, split_regression
+
+EnsoKind = Literal["enso", "nino", "nina"]
+_PREFIX = {"enso": "Enso", "nino": "Nino", "nina": "Nina"}
 
 # W m-2 during one month to temperature change of a 50 m slab of sea water
 _SECONDS_PER_MONTH = 60 * 60 * 24 * 30.42
@@ -45,6 +50,42 @@ def _anomalies(
     if smoothing:
         anomalies = smooth(anomalies, window=smoothing)
     return anomalies
+
+
+def _prefix(kind: str) -> str:
+    """CLIVAR name prefix for regression-based ("enso") or composite ("nino", "nina") metrics."""
+    if kind not in _PREFIX:
+        raise ValueError(f"kind must be one of {sorted(_PREFIX)}, got {kind!r}")
+    return _PREFIX[kind]
+
+
+def _lifecycle(
+    sst: xr.DataArray,
+    field: xr.DataArray | None = None,
+    region: str = "nino34",
+    field_region: str | None = None,
+    month: int = 12,
+    window: int = 6,
+    smoothing: int | None = 5,
+    kind: EnsoKind = "enso",
+    threshold: float = 0.75,
+) -> xr.DataArray:
+    """
+    ENSO life cycle of ``field`` (default: the SST index itself) along a ``lag`` dimension.
+
+    "enso": regression, without intercept, onto the index in ``month`` of each year.
+    "nino"/"nina": composite over the events detected in the index.
+    """
+    _prefix(kind)
+    index = _anomalies(sst, region, smoothing)
+    series = index if field is None else _anomalies(field, field_region or region, smoothing)
+    if kind == "enso":
+        peak = seasonal_series(index, month)
+        peak = peak - peak.mean("year")
+        windows = event_windows(series, peak.year, window=window, month=month)
+        return linregress(windows, peak, dim="year", fit_intercept=False).slope
+    events = detect_events(index, threshold=threshold, season=month, kind=kind)
+    return composite(series, events, window=window, month=month)
 
 
 def _zonal_section(data: xr.DataArray, region: str) -> xr.DataArray:
@@ -172,13 +213,63 @@ def enso_duration(
     Dataset with the duration in months as ``value`` and the regression
     life cycle as ``lifecycle``.
     """
-    index = _anomalies(sst, region, smoothing)
-    peak = seasonal_series(index, month)
-    peak = peak - peak.mean("year")
-    windows = event_windows(index, peak.year, window=window, month=month)
-    lifecycle = linregress(windows, peak, dim="year", fit_intercept=False).slope
+    lifecycle = _lifecycle(sst, region=region, month=month, window=window, smoothing=smoothing)
     value = event_duration(lifecycle, threshold)
     return _result(value, "EnsoDuration", "months", lifecycle=lifecycle)
+
+
+def enso_event_duration(
+    sst: xr.DataArray,
+    kind: Literal["nino", "nina"] = "nino",
+    region: str = "nino34",
+    threshold: float = 0.75,
+    duration_threshold: float = 0.5,
+    month: int = 12,
+    window: int = 6,
+    smoothing: int | None = 5,
+) -> xr.Dataset:
+    """
+    Mean duration of El Niño or La Niña events (CLIVAR: NinoSstDur, NinaSstDur).
+
+    Events are detected with :func:`xenso.detect_events` in ``month``. The
+    duration of each event is the number of consecutive months around the
+    peak during which the index stays beyond ``duration_threshold`` standard
+    deviations of the monthly index (see :func:`xenso.event_duration`).
+
+    Parameters
+    ----------
+    sst
+        Monthly SST with time, lat and lon dimensions.
+    kind
+        "nino" or "nina".
+    region
+        Key of :data:`xenso.REGIONS`.
+    threshold
+        Event threshold in standard deviations of the index in ``month``.
+    duration_threshold
+        Threshold of the duration in standard deviations of the monthly index.
+    month
+        Calendar month of the event peak.
+    window
+        Even number of years around each event (see :func:`xenso.event_windows`).
+    smoothing
+        Length of the triangular running mean applied first, or None.
+
+    Returns
+    -------
+    Dataset with the mean duration in months as ``value``, its standard error
+    as ``error`` and the duration of each event as ``durations``.
+    """
+    if kind not in ("nino", "nina"):
+        raise ValueError(f"kind must be 'nino' or 'nina', got {kind!r}")
+    index = _anomalies(sst, region, smoothing)
+    events = detect_events(index, threshold=threshold, season=month, kind=kind)
+    windows = event_windows(index, events, window=window, month=month)
+    durations = event_duration(windows, duration_threshold * index.std("time"), kind=kind)
+    error = durations.std("year") / np.sqrt(durations.sizes["year"])
+    return _result(
+        durations.mean("year"), f"{_prefix(kind)}SstDur", "months", error=error, durations=durations
+    )
 
 
 def enso_diversity(
@@ -189,16 +280,22 @@ def enso_diversity(
     season: str | int = "DEC",
     smoothing: int | None = 5,
     lon_smoothing: int = 5,
+    kind: EnsoKind = "enso",
+    east_of: float = 220.0,
 ) -> xr.Dataset:
     """
     Spread of the longitude of the peak SST anomaly among ENSO events
-    (CLIVAR: EnsoSstDiversity).
+    (CLIVAR: EnsoSstDiversity, NinoSstDiversity, NinaSstDiversity).
 
     Events are detected with :func:`xenso.detect_events` (normalized
     threshold) in ``event_region``. For each event the equatorial SST anomaly
     profile in ``season`` is smoothed in longitude and the longitude of its
     maximum (El Niño) or minimum (La Niña) is taken. The diversity is the
-    interquartile range of these longitudes over all events.
+    interquartile range of these longitudes over all events, or over El Niño
+    or La Niña events only. Also returned is the percentage of events peaking
+    east of ``east_of`` (CLIVAR: NinoSstDiv, NinaSstDiv). The peak longitude
+    of a single event can jump between two nearly equal maxima, so the
+    diversity changes in steps with small changes of the input.
 
     Parameters
     ----------
@@ -217,15 +314,25 @@ def enso_diversity(
         Length of the triangular running mean in time, or None.
     lon_smoothing
         Number of longitude points of the triangular smoothing of each profile.
+    kind
+        "enso" for all events, "nino" or "nina" for one kind.
+    east_of
+        Longitude, in °E, separating eastern Pacific events (CLIVAR: 140°W).
 
     Returns
     -------
     Dataset with the interquartile range as ``value``, the median absolute
-    deviation as ``mad`` and the longitude of each event as ``peak_lon``.
+    deviation as ``mad``, the percentage of eastern Pacific events as
+    ``eastern_fraction`` and the longitude of each event as ``peak_lon``.
     """
+    prefix = _prefix(kind)
     index = _anomalies(sst, event_region, smoothing)
     nino = detect_events(index, threshold=threshold, season=season, kind="nino")
     nina = detect_events(index, threshold=threshold, season=season, kind="nina")
+    if kind == "nino":
+        nina = nina.isel(year=slice(0, 0))
+    elif kind == "nina":
+        nino = nino.isel(year=slice(0, 0))
 
     profiles = seasonal_series(_anomalies(_zonal_section(sst, region), smoothing=smoothing), season)
     profiles = smooth(profiles - profiles.mean("year"), window=lon_smoothing, dim="lon")
@@ -244,7 +351,15 @@ def enso_diversity(
     quartiles = peak_lon.quantile([0.25, 0.75], dim="year")
     value = quartiles.sel(quantile=0.75, drop=True) - quartiles.sel(quantile=0.25, drop=True)
     mad = abs(peak_lon - peak_lon.median("year")).median("year")
-    return _result(value, "EnsoSstDiversity", "degrees", mad=mad, peak_lon=peak_lon)
+    eastern_fraction = 100 * (peak_lon > east_of).mean("year")
+    return _result(
+        value,
+        f"{prefix}SstDiversity",
+        "degrees",
+        mad=mad,
+        eastern_fraction=eastern_fraction,
+        peak_lon=peak_lon,
+    )
 
 
 def _feedback(response, forcing, response_region, forcing_region, clivar_name) -> xr.Dataset:

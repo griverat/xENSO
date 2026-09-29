@@ -131,6 +131,47 @@ class TestDiversity:
         np.testing.assert_allclose(result.value, np.percentile(lons, 75) - np.percentile(lons, 25))
         np.testing.assert_allclose(result.mad, np.median(np.abs(lons - np.median(lons))))
         assert result.attrs["clivar_name"] == "EnsoSstDiversity"
+        # 250°E and 230°E out of 250, 200, 230, 190 and 210°E are east of 220°E
+        np.testing.assert_allclose(result.eastern_fraction, 40)
+
+    @pytest.mark.parametrize(
+        "kind,years,eastern",
+        [("nino", [3, 11, 19], 100 * 2 / 3), ("nina", [7, 15], 0)],
+    )
+    def test_one_kind(self, field, kind, years, eastern):
+        result = xenso.enso_diversity(field, kind=kind)
+        np.testing.assert_array_equal(result.peak_lon.year, [TIME[0].year + y for y in years])
+        assert (result.peak_lon.kind == kind).all()
+        lons = result.peak_lon.values
+        np.testing.assert_allclose(result.value, np.percentile(lons, 75) - np.percentile(lons, 25))
+        np.testing.assert_allclose(result.eastern_fraction, eastern)
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}SstDiversity"
+
+    def test_invalid_kind(self, field):
+        with pytest.raises(ValueError):
+            xenso.enso_diversity(field, kind="neutral")
+
+
+class TestEventDuration:
+    @pytest.mark.parametrize("kind", ["nino", "nina"])
+    def test_duration(self, kind):
+        series = event_series()
+        result = xenso.enso_event_duration(uniform_field(series), kind=kind, smoothing=None)
+        # every event has the same shape, so the same duration and no spread
+        expected = (SHAPE > 0.5 * float(series.std())).sum()
+        assert result.durations.sizes["year"] == N_EVENTS // 2
+        np.testing.assert_array_equal(result.durations, expected)
+        np.testing.assert_allclose([result.value, result.error], [expected, 0])
+        assert result.attrs["clivar_name"] == f"{kind.capitalize()}SstDur"
+
+    def test_threshold(self):
+        field = uniform_field(event_series())
+        short = xenso.enso_event_duration(field, duration_threshold=2, smoothing=None)
+        assert short.value < xenso.enso_event_duration(field, smoothing=None).value
+
+    def test_invalid_kind(self):
+        with pytest.raises(ValueError):
+            xenso.enso_event_duration(uniform_field(event_series()), kind="enso")
 
 
 class TestFeedbacks:
