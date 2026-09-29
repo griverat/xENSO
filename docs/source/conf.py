@@ -58,10 +58,10 @@ intersphinx_mapping = {
 
 # -- Notebooks ---------------------------------------------------------------
 
-# The tutorial lives in notebooks/; copy it here so it can be rendered, without executing it
-shutil.copy(
-    Path(__file__).parent / "../../notebooks/tutorial.ipynb", Path(__file__).parent / "tutorial.ipynb"
-)
+# The notebooks live in notebooks/; copy them here so they are rendered with their stored
+# outputs, without executing them (the model evaluation needs data that Read the Docs does not have)
+for notebook in ["tutorial.ipynb", "model_evaluation.ipynb"]:
+    shutil.copy(Path(__file__).parent / "../../notebooks" / notebook, Path(__file__).parent / notebook)
 nb_execution_mode = "off"
 
 # -- Copy button -------------------------------------------------------------
