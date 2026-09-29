@@ -1,25 +1,47 @@
+:html_theme.sidebar_secondary.remove: true
+
+.. module:: xenso
+
 xENSO documentation
 ===================
 
-This package aims to ease the computation of indices commonly used to monitor and study ENSO conditions.
+ENSO indices, diagnostics and model-evaluation metrics using xarray structures.
 
-This project will eventually add more indices as I come across them.
+**Version**: |version|
 
+**Useful links**:
+`Code Repository <https://github.com/DangoMelon/xENSO>`__ |
+`Issues <https://github.com/DangoMelon/xENSO/issues>`__ |
+`CLIVAR ENSO Metrics Package <https://github.com/CLIVAR-PRP/enso_metrics>`__
 
-.. note:: I am farily new to creating packages so if someone comes across this repo feel free to suggest anything, I am more than willing to start a conversation!
+.. grid:: 1 1 3 3
+    :gutter: 2
 
+    .. grid-item-card:: Get started
+        :link: getting-started
+        :link-type: doc
+
+        *New to xENSO?*
+        Installation instructions and a brief overview of what xENSO computes.
+
+    .. grid-item-card:: User guide
+        :link: user-guide
+        :link-type: doc
+
+        *Ready to compute indices or evaluate a model?*
+        Worked examples for the ENSO indices and the CLIVAR ENSO metrics.
+
+    .. grid-item-card:: API reference
+        :link: api
+        :link-type: doc
+
+        *Looking for a specific function?*
+        The documentation of all public functions and classes.
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
+   :maxdepth: 2
+   :hidden:
 
-   tutorial.ipynb
-   enso_metrics
-   api
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   Get Started <getting-started>
+   User Guide <user-guide>
+   API Reference <api>

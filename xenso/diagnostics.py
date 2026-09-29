@@ -411,9 +411,7 @@ def heat_flux_feedback(
     sensible heat fluxes, positive into the ocean, so the feedback is
     negative when the fluxes damp SST anomalies.
 
-    Returns
-    -------
-    Same as :func:`bjerknes_feedback`.
+    The result has the same variables as :func:`bjerknes_feedback`.
     """
     return _feedback(thf, sst, thf_region, sst_region, "EnsoFbSstThf")
 
@@ -431,9 +429,7 @@ def thermocline_feedback(
     CLIVAR expresses sea surface height in cm; convert ``ssh`` first to obtain
     the same numbers.
 
-    Returns
-    -------
-    Same as :func:`bjerknes_feedback`.
+    The result has the same variables as :func:`bjerknes_feedback`.
     """
     return _feedback(sst, ssh, sst_region, ssh_region, "EnsoFbSshSst")
 
@@ -451,9 +447,7 @@ def wind_ssh_feedback(
     CLIVAR expresses sea surface height in cm and zonal wind stress in
     1e-3 N m-2; convert the inputs first to obtain the same numbers.
 
-    Returns
-    -------
-    Same as :func:`bjerknes_feedback`.
+    The result has the same variables as :func:`bjerknes_feedback`.
     """
     return _feedback(ssh, taux, ssh_region, taux_region, "EnsoFbTauxSsh")
 

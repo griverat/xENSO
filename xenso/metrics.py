@@ -121,9 +121,7 @@ def seasonal_cycle_rmse(
     linearly detrended field at each grid point, which is then averaged as in
     :func:`mean_state_rmse`.
 
-    Parameters
-    ----------
-    Same as :func:`mean_state_rmse`.
+    Parameters are the same as :func:`mean_state_rmse`.
     """
     region = region or ("equatorial_pacific" if along == "lon" else "nino3_latext")
 
