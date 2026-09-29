@@ -100,11 +100,11 @@ class TestRegionMean:
         np.testing.assert_allclose(result, np.average(np.abs(lat), weights=np.cos(np.deg2rad(lat))))
         np.testing.assert_allclose(xenso.region_mean(abs_lat, "nino3_latext", weighted=False), 7.5)
 
-    def test_nino_regions_weighted(self, abs_lat):
-        xr.testing.assert_allclose(
-            xenso.nino_regions(abs_lat, "3", weighted=True), xenso.region_mean(abs_lat, "nino3")
-        )
-        assert xenso.nino_regions(abs_lat, "3") != xenso.region_mean(abs_lat, "nino3")
+    def test_nino_regions_weighted_by_default(self, abs_lat):
+        xr.testing.assert_allclose(xenso.nino_regions(abs_lat, "3"), xenso.region_mean(abs_lat, "nino3"))
+        unweighted = xenso.nino_regions(abs_lat, "3", weighted=False)
+        xr.testing.assert_allclose(unweighted, xenso.region_mean(abs_lat, "nino3", weighted=False))
+        assert unweighted != xenso.nino_regions(abs_lat, "3")
 
     def test_skips_missing(self, abs_lat):
         masked = abs_lat.where(abs_lat.lon < 200)
