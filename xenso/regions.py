@@ -67,10 +67,10 @@ def region_mean(
 def nino_regions(
     data: xr.DataArray,
     region: Literal["12", "3", "34", "4"] = "34",
-    weighted: bool = False,
+    weighted: bool = True,
 ) -> xr.DataArray:
     """
-    Compute the spatial mean over the selected El Niño region.
+    Compute the area-weighted spatial mean over the selected El Niño region.
 
     Parameters
     ----------
@@ -79,7 +79,9 @@ def nino_regions(
     region
         El Niño region: "12", "3", "34", or "4".
     weighted
-        Weight by cos(latitude), as done in the CLIVAR ENSO Metrics Package.
+        Weight by cos(latitude), which accounts for the smaller area of grid
+        cells at higher latitudes. Set to False for the plain mean of the grid
+        points, which was the previous default.
     """
     return _box_mean(data, _REGIONS[region], weighted)
 
@@ -123,7 +125,7 @@ def roni(
         Start and end dates used to compute the climatology.
     """
     nino34_anom = compute_anomaly(nino_regions(data, region="34"), base_period=base_period)
-    trop_mean = normalize_coords(data).sel(**_TROPICAL_DOMAIN).mean(dim=["lat", "lon"])
+    trop_mean = _box_mean(data, _TROPICAL_DOMAIN, weighted=True)
     trop_anom = compute_anomaly(trop_mean, base_period=base_period)
 
     diff = nino34_anom - trop_anom
