@@ -50,6 +50,22 @@ def test_identical_datasets(fields, collection):
     np.testing.assert_allclose(result.value.where(~ones, drop=True), 0, atol=1e-10)
 
 
+@pytest.mark.parametrize("collection", ["ENSO_perf", "ENSO_tel"])
+def test_metric_types(fields, collection):
+    result = xenso.clivar_collection(fields, fields, collection)
+    by_type = {kind: result.sel(metric=result.type == kind) for kind in set(result.type.values)}
+    # RMSE metrics compare whole profiles or maps: no single model or observed value
+    rmse = by_type["rmse"]
+    assert rmse.metric.str.endswith("Rmse").all()
+    assert rmse.model.isnull().all() and rmse.obs.isnull().all()
+    # scalar diagnostics give both values the metric is computed from
+    diagnostics = by_type["relative difference (%)"]
+    assert diagnostics.model.notnull().all() and diagnostics.obs.notnull().all()
+    if collection == "ENSO_tel":
+        assert by_type["correlation"].metric.str.endswith("Corr").all()
+        assert by_type["std ratio"].metric.str.endswith("Std").all()
+
+
 def test_diagnostics_and_relative_difference(fields):
     model = fields.assign(sst=2 * fields.sst)
     result = xenso.clivar_collection(model, fields, "ENSO_perf")
