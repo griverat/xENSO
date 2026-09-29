@@ -39,6 +39,14 @@ dev = [
     "pre-commit",
     "ruff",
 ]
+docs = [
+    "sphinx",
+    "pydata-sphinx-theme",
+    "sphinx-design",
+    "sphinx-copybutton",
+    "myst-nb",
+    "netcdf4",
+]
 
 [tool.setuptools.packages.find]
 include = ["xenso*"]
