@@ -21,6 +21,12 @@ from .stats import compare
 Fields = Mapping[str, xr.DataArray]
 Rows = dict[str, tuple]
 
+# the kinds of metric in a collection, listed in the ``type`` column
+RELATIVE_DIFFERENCE = "relative difference (%)"
+RMSE = "rmse"
+CORRELATION = "correlation"
+STD_RATIO = "std ratio"
+
 
 def _diagnostic(function: Callable, *variables: str) -> Callable[[Fields, Fields], Rows]:
     """Scalar diagnostic: the metric is the absolute relative difference in %."""
@@ -29,7 +35,7 @@ def _diagnostic(function: Callable, *variables: str) -> Callable[[Fields, Fields
         model_result = function(*(model[v] for v in variables))
         obs_result = function(*(obs[v] for v in variables))
         value, _ = compare(model_result, obs_result)
-        return {"": (value, model_result["value"], obs_result["value"])}
+        return {"": (RELATIVE_DIFFERENCE, value, model_result["value"], obs_result["value"])}
 
     return compute
 
@@ -39,7 +45,7 @@ def _rmse(function: Callable, *variables: str, **kwargs) -> Callable[[Fields, Fi
 
     def compute(model, obs):
         fields = [field for v in variables for field in (model[v], obs[v])]
-        return {"": (function(*fields, **kwargs)["value"], np.nan, np.nan)}
+        return {"": (RMSE, function(*fields, **kwargs)["value"], np.nan, np.nan)}
 
     return compute
 
@@ -52,9 +58,9 @@ def _teleconnection(variable: str, season: str) -> Callable[[Fields, Fields], Ro
             model["sst"], obs["sst"], model[variable], obs[variable], season=season, variable=variable
         )
         return {
-            "Corr": (result.correlation, np.nan, np.nan),
-            "Rmse": (result.value, np.nan, np.nan),
-            "Std": (result.std_ratio, np.nan, np.nan),
+            "Corr": (CORRELATION, result.correlation, np.nan, np.nan),
+            "Rmse": (RMSE, result.value, np.nan, np.nan),
+            "Std": (STD_RATIO, result.std_ratio, np.nan, np.nan),
         }
 
     return compute
@@ -160,25 +166,26 @@ def clivar_collection(
 
     Returns
     -------
-    Dataset along a ``metric`` dimension with the metric as ``value`` and,
-    for scalar diagnostics, the model and observed diagnostics as ``model``
-    and ``obs``.
+    Dataset along a ``metric`` dimension with the kind of metric as ``type``
+    ("relative difference (%)", "rmse", "correlation" or "std ratio"), the
+    metric as ``value`` and, for scalar diagnostics, the model and observed
+    diagnostics as ``model`` and ``obs``. RMSE metrics compare whole profiles
+    or maps, so they have no model or observed value (NaN).
     """
     if collection not in COLLECTIONS:
         raise ValueError(f"unknown collection {collection!r}, expected one of {sorted(COLLECTIONS)}")
 
-    names, rows = [], []
+    names, types, rows = [], [], []
     for metric in COLLECTIONS[collection]:
         variables, compute = _METRICS[metric]
         if not all(v in model and v in obs for v in variables):
             continue
-        for suffix, row in compute(model, obs).items():
+        for suffix, (kind, *row) in compute(model, obs).items():
             names.append(metric + suffix)
+            types.append(kind)
             rows.append([float(x) for x in row])
 
     table = np.array(rows, dtype=float).reshape(-1, 3)
-    return xr.Dataset(
-        {name: ("metric", table[:, i]) for i, name in enumerate(["value", "model", "obs"])},
-        coords={"metric": names},
-        attrs={"collection": collection},
-    )
+    columns = {"type": ("metric", np.array(types, dtype=str))}
+    columns.update({name: ("metric", table[:, i]) for i, name in enumerate(["value", "model", "obs"])})
+    return xr.Dataset(columns, coords={"metric": names}, attrs={"collection": collection})
